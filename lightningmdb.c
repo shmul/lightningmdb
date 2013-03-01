@@ -48,8 +48,8 @@ static int env_open(lua_State *L) {
     int mode = luaL_checkinteger(L,4);
     int err;
 
-    if ( !env || !path ) {
-        return str_error_and_out(L,"bad params");
+    if ( !path ) {
+        return str_error_and_out(L,"path required");
     }
     err = mdb_env_open(env,path,flags,mode);
     if ( err ) {
@@ -64,8 +64,8 @@ static int env_copy(lua_State *L) {
     const char* path = luaL_checkstring(L,2);
     int err;
 
-    if ( !env || !path ) {
-        return str_error_and_out(L,"bad params");
+    if ( !path ) {
+        return str_error_and_out(L,"path required");
     }
     err = mdb_env_copy(env,path);
     if ( err ) {
@@ -77,9 +77,6 @@ static int env_copy(lua_State *L) {
 
 static int env_stat(lua_State *L) {
     MDB_env* env = check_env(L,1);
-    if ( !env ) {
-        return str_error_and_out(L,"bad params");
-    }
     MDB_stat stat;
     mdb_env_stat(env,&stat);
     lua_newtable(L);
@@ -100,9 +97,6 @@ static int env_stat(lua_State *L) {
 
 static int env_info(lua_State *L) {
     MDB_env* env = check_env(L,1);
-    if ( !env ) {
-        return str_error_and_out(L,"bad params");
-    }
     MDB_envinfo info;
     mdb_env_info(env,&info);
     lua_newtable(L);
@@ -124,11 +118,7 @@ static int env_info(lua_State *L) {
 static int env_sync(lua_State *L) {
     MDB_env* env = check_env(L,1);
     int force = luaL_checkinteger(L,2);
-    int err;
-    if ( !env ) {
-        return str_error_and_out(L,"bad params");
-    }
-    err = mdb_env_sync(env,force);
+    int err = mdb_env_sync(env,force);
     if ( err ) {
         return error_and_out(L,err);
     }
@@ -138,9 +128,6 @@ static int env_sync(lua_State *L) {
 
 static int env_close(lua_State *L) {
     MDB_env* env = check_env(L,1);
-    if ( !env ) {
-        return str_error_and_out(L,"bad userdata");
-    }
     mdb_env_close(env);
     lua_pushnil(L);
     lua_setmetatable(L,1);
@@ -151,11 +138,7 @@ static int env_set_flags(lua_State *L) {
     MDB_env* env = check_env(L,1);
     unsigned int flags = luaL_checkinteger(L,2);
     int onoff = luaL_checkinteger(L,3);
-    int err;
-    if ( !env ) {
-        return str_error_and_out(L,"bad params");
-    }
-    err = mdb_env_set_flags(env,flags,onoff);
+    int err = mdb_env_set_flags(env,flags,onoff);
     if ( err ) {
         return error_and_out(L,err);
     }
@@ -166,11 +149,7 @@ static int env_set_flags(lua_State *L) {
 static int env_get_flags(lua_State *L) {
     MDB_env* env = check_env(L,1);
     unsigned int flags = 0;
-    int err;
-    if ( !env ) {
-        return str_error_and_out(L,"bad params");
-    }
-    err = mdb_env_get_flags(env,&flags);
+    int err = mdb_env_get_flags(env,&flags);
     if ( err ) {
         return error_and_out(L,err);
     }
@@ -181,11 +160,7 @@ static int env_get_flags(lua_State *L) {
 static int env_get_path(lua_State *L) {
     MDB_env* env = check_env(L,1);
     const char* path;
-    int err;
-    if ( !env ) {
-        return str_error_and_out(L,"bad params");
-    }
-    err = mdb_env_get_path(env,&path);
+    int err = mdb_env_get_path(env,&path);
     if ( err ) {
         return error_and_out(L,err);
     }
@@ -298,29 +273,45 @@ int env_register(lua_State* L) {
 
 /* txn */
 
-static int txn_gc(lua_State* L) {
-    return 0;
-}
-
 static int txn_commit(lua_State* L) {
-    return 0;
+    MDB_txn* txn = check_txn(L,1);
+    int err = mdb_txn_commit(txn);
+
+    if ( err ) {
+        return error_and_out(L,err);
+    }
+
+    lua_pushnil(L);
+    lua_setmetatable(L,1);
+    lua_pushboolean(L,1);
+    return 1;
 }
 
 static int txn_abort(lua_State* L) {
+    MDB_txn* txn = check_txn(L,1);
+    mdb_txn_abort(txn);
+
+    lua_pushnil(L);
+    lua_setmetatable(L,1);
     return 0;
 }
 
 static int txn_reset(lua_State* L) {
+    MDB_txn* txn = check_txn(L,1);
+    mdb_txn_reset(txn);
     return 0;
 }
 
 static int txn_renew(lua_State* L) {
+    MDB_txn* txn = check_txn(L,1);
+    mdb_txn_renew(txn);
     return 0;
 }
 
 
 static const luaL_reg txn_methods[] = {
-    {"__gc",txn_gc},
+    {"__gc",txn_abort}, /* if the transaction is properly committed, the sensible thing
+                         * would be to abort it in gc */
     {"commit",txn_commit},
     {"abort",txn_abort},
     {"reset",txn_reset},

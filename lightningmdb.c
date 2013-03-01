@@ -149,6 +149,9 @@ int env_register(lua_State* L) {
     lua_settable(L,-1);
 
     luaL_getmetatable(L,ENV);
+    lua_setfield(L,-1,"__index");
+
+    luaL_getmetatable(L,ENV);
     lua_pushnumber(L,MDB_FIXEDMAP);
     lua_setfield(L,-2,"MDB_FIXEDMAP");
 
@@ -160,13 +163,13 @@ int env_register(lua_State* L) {
     lua_setfield(L,-2,"MDB_RDONLY");
     lua_pushnumber(L,MDB_NOMETASYNC);
 
-    lua_setfield(L,-2,"MDB_NOMETASYNC");
-    lua_pushnumber(L,MDB_WRITEMAP);
-    lua_setfield(L,-2,"MDB_WRITEMAP");
-    lua_pushnumber(L,MDB_MAPASYNC);
-    lua_setfield(L,-2,"MDB_MAPASYNC");
+                   lua_setfield(L,-2,"MDB_NOMETASYNC");
+                   lua_pushnumber(L,MDB_WRITEMAP);
+                   lua_setfield(L,-2,"MDB_WRITEMAP");
+                   lua_pushnumber(L,MDB_MAPASYNC);
+                   lua_setfield(L,-2,"MDB_MAPASYNC");
 
-    return 1;
+                   return 1;
 }
 
 /* globals */

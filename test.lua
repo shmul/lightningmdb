@@ -19,3 +19,5 @@ print("-- info --")
 for k,v in pairs(e:info()) do
   print(k,v)
 end
+
+print("get_path",e:get_path())

@@ -139,30 +139,68 @@ static int env_close(lua_State *L) {
 }
 
 static int env_set_flags(lua_State *L) {
-    return 0;
+    MDB_env* env = check_env(L,1);
+    unsigned int flags = luaL_checkinteger(L,2);
+    int onoff = luaL_checkinteger(L,3);
+    int err;
+    if ( !env ) {
+        return str_error_and_out(L,"bad params");
+    }
+    err = mdb_env_set_flags(env,flags,onoff);
+    if ( err ) {
+        return error_and_out(L,err);
+    }
+    lua_pushboolean(L,1);
+    return 1;
 }
 
 static int env_get_flags(lua_State *L) {
-    return 0;
+    MDB_env* env = check_env(L,1);
+    unsigned int flags = 0;
+    int err;
+    if ( !env ) {
+        return str_error_and_out(L,"bad params");
+    }
+    err = mdb_env_get_flags(env,&flags);
+    if ( err ) {
+        return error_and_out(L,err);
+    }
+    lua_pushinteger(L,flags);
+    return 1;
 }
 
 static int env_get_path(lua_State *L) {
-    return 0;
+    MDB_env* env = check_env(L,1);
+    const char* path;
+    int err;
+    if ( !env ) {
+        return str_error_and_out(L,"bad params");
+    }
+    err = mdb_env_get_path(env,&path);
+    if ( err ) {
+        return error_and_out(L,err);
+    }
+    lua_pushstring(L,path);
+    return 1;
 }
 
 static int env_set_mapsize(lua_State *L) {
+    // TODO
     return 0;
 }
 
 static int env_set_maxreaders(lua_State *L) {
+    // TODO
     return 0;
 }
 
 static int env_get_maxreaders(lua_State *L) {
+    // TODO
     return 0;
 }
 
 static int env_set_maxdbs(lua_State *L) {
+    // TODO
     return 0;
 }
 

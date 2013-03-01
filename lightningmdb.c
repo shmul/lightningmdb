@@ -31,6 +31,13 @@ static MDB_txn* check_txn(lua_State *L, int index) {
     return txn;
 }
 
+static int success_or_err(lua_State* L,int err) {
+    if ( err ) {
+        return error_and_out(L,err);
+    }
+    lua_pushboolean(L,1);
+    return 1;
+}
 
 static MDB_env* check_env(lua_State *L, int index) {
     MDB_env* env;
@@ -38,6 +45,23 @@ static MDB_env* check_env(lua_State *L, int index) {
     env = *(MDB_env**)luaL_checkudata(L, index, ENV);
     if (env == NULL) luaL_typerror(L,index,ENV);
     return env;
+}
+
+static int stat_to_table(lua_State *L,MDB_stat *stat) {
+    lua_newtable(L);
+    lua_pushnumber(L,stat->ms_psize);
+    lua_setfield(L,-2,"ms_psize");
+    lua_pushnumber(L,stat->ms_depth);
+    lua_setfield(L,-2,"ms_depth");
+    lua_pushnumber(L,stat->ms_branch_pages);
+    lua_setfield(L,-2,"ms_branch_pages");
+    lua_pushnumber(L,stat->ms_leaf_pages);
+    lua_setfield(L,-2,"ms_leaf_pages");
+    lua_pushnumber(L,stat->ms_overflow_pages);
+    lua_setfield(L,-2,"ms_overflow_pages");
+    lua_pushnumber(L,stat->ms_entries);
+    lua_setfield(L,-2,"ms_entries");
+    return 1;
 }
 
 /* env */
@@ -52,11 +76,7 @@ static int env_open(lua_State *L) {
         return str_error_and_out(L,"path required");
     }
     err = mdb_env_open(env,path,flags,mode);
-    if ( err ) {
-        return error_and_out(L,err);
-    }
-    lua_pushboolean(L,1);
-    return 1;
+    return success_or_err(L,err);
 }
 
 static int env_copy(lua_State *L) {
@@ -68,31 +88,14 @@ static int env_copy(lua_State *L) {
         return str_error_and_out(L,"path required");
     }
     err = mdb_env_copy(env,path);
-    if ( err ) {
-        return error_and_out(L,err);
-    }
-    lua_pushboolean(L,1);
-    return 1;
+    return success_or_err(L,err);
 }
 
 static int env_stat(lua_State *L) {
     MDB_env* env = check_env(L,1);
     MDB_stat stat;
     mdb_env_stat(env,&stat);
-    lua_newtable(L);
-    lua_pushnumber(L,stat.ms_psize);
-    lua_setfield(L,-2,"ms_psize");
-    lua_pushnumber(L,stat.ms_depth);
-    lua_setfield(L,-2,"ms_depth");
-    lua_pushnumber(L,stat.ms_branch_pages);
-    lua_setfield(L,-2,"ms_branch_pages");
-    lua_pushnumber(L,stat.ms_leaf_pages);
-    lua_setfield(L,-2,"ms_leaf_pages");
-    lua_pushnumber(L,stat.ms_overflow_pages);
-    lua_setfield(L,-2,"ms_overflow_pages");
-    lua_pushnumber(L,stat.ms_entries);
-    lua_setfield(L,-2,"ms_entries");
-    return 1;
+    return stat_to_table(L,&stat);
 }
 
 static int env_info(lua_State *L) {
@@ -119,11 +122,7 @@ static int env_sync(lua_State *L) {
     MDB_env* env = check_env(L,1);
     int force = luaL_checkinteger(L,2);
     int err = mdb_env_sync(env,force);
-    if ( err ) {
-        return error_and_out(L,err);
-    }
-    lua_pushboolean(L,1);
-    return 1;
+    return success_or_err(L,err);
 }
 
 static int env_close(lua_State *L) {
@@ -139,11 +138,7 @@ static int env_set_flags(lua_State *L) {
     unsigned int flags = luaL_checkinteger(L,2);
     int onoff = luaL_checkinteger(L,3);
     int err = mdb_env_set_flags(env,flags,onoff);
-    if ( err ) {
-        return error_and_out(L,err);
-    }
-    lua_pushboolean(L,1);
-    return 1;
+    return success_or_err(L,err);
 }
 
 static int env_get_flags(lua_State *L) {
@@ -208,6 +203,15 @@ static int env_txn_begin(lua_State* L) {
     return 1;
 }
 
+static int env_dbi_close(lua_State* L) {
+    MDB_env* env = check_env(L,1);
+    MDB_dbi dbi = luaL_checkinteger(L,2);
+
+    mdb_dbi_close(env,dbi);
+    return 0;
+}
+
+
 static const luaL_reg env_methods[] = {
     {"__gc",env_close},
     {"open",env_open},
@@ -224,6 +228,7 @@ static const luaL_reg env_methods[] = {
     {"get_maxreaders",env_get_maxreaders},
     {"set_maxdbs",env_set_maxdbs},
     {"txn_begin",env_txn_begin},
+    {"dbi_close",env_dbi_close},
     {0,0}
 };
 
@@ -308,6 +313,83 @@ static int txn_renew(lua_State* L) {
     return 0;
 }
 
+static int txn_dbi_open(lua_State* L) {
+    MDB_txn* txn = check_txn(L,1);
+    const char* name = !lua_isnil(L,2) ? luaL_checkstring(L,2) : NULL;
+    unsigned int flags = luaL_checkinteger(L,3);
+		MDB_dbi dbi;
+    int err = mdb_dbi_open(txn,name,flags,&dbi);
+    if ( err ) {
+        return error_and_out(L,err);
+    }
+
+    lua_pushinteger(L,dbi);
+    return 1;
+}
+
+static int txn_stat(lua_State* L) {
+    MDB_txn* txn = check_txn(L,1);
+    MDB_dbi dbi = luaL_checkinteger(L,2);
+    MDB_stat stat;
+    mdb_stat(txn,dbi,&stat);
+    return stat_to_table(L,&stat);
+}
+
+static int txn_dbi_drop(lua_State* L) {
+    MDB_txn* txn = check_txn(L,1);
+    MDB_dbi dbi = luaL_checkinteger(L,2);
+    int del = luaL_checkinteger(L,1);
+    int err = mdb_drop(txn,dbi,del);
+    return success_or_err(L,err);
+}
+
+static void pop_val(lua_State* L,int index,MDB_val* val) {
+    val->mv_data = (void*)luaL_checklstring(L,index,&val->mv_size);
+}
+
+static int txn_get(lua_State* L) {
+    MDB_txn* txn = check_txn(L,1);
+    MDB_dbi dbi = luaL_checkinteger(L,2);
+    MDB_val k,v;
+    pop_val(L,3,&k);
+
+    int err;
+    err = mdb_get(txn,dbi,&k,&v);
+    switch (err) {
+    case MDB_NOTFOUND:
+        lua_pushnil(L);
+        return 1;
+    case 0:
+        lua_pushlstring(L,v.mv_data,v.mv_size);
+        return 1;
+    }
+    return error_and_out(L,err);
+}
+
+static int txn_put(lua_State* L) {
+    MDB_txn* txn = check_txn(L,1);
+    MDB_dbi dbi = luaL_checkinteger(L,2);
+    MDB_val k,v;
+    pop_val(L,3,&k);
+    pop_val(L,4,&v);
+    unsigned int flags = luaL_checkinteger(L,5);
+    int err;
+
+    err = mdb_put(txn,dbi,&k,&v,flags);
+    return success_or_err(L,err);
+}
+
+static int txn_del(lua_State* L) {
+    MDB_txn* txn = check_txn(L,1);
+    MDB_dbi dbi = luaL_checkinteger(L,2);
+    MDB_val k,v;
+    pop_val(L,3,&k);
+    pop_val(L,4,&v);
+    int err;
+
+    err = mdb_del(txn,dbi,&k,&v);
+    return success_or_err(L,err);
+}
 
 static const luaL_reg txn_methods[] = {
     {"__gc",txn_abort}, /* if the transaction is properly committed, the sensible thing
@@ -316,6 +398,12 @@ static const luaL_reg txn_methods[] = {
     {"abort",txn_abort},
     {"reset",txn_reset},
     {"renew",txn_renew},
+    {"dbi_open",txn_dbi_open},
+    {"stat",txn_stat},
+    {"dbi_drop",txn_dbi_drop},
+    {"get",txn_get},
+    {"put",txn_put},
+    {"del",txn_del},
     {0,0}
 };
 
@@ -330,8 +418,29 @@ int txn_register(lua_State* L) {
     luaL_getmetatable(L,TXN);
     lua_setfield(L,-1,"__index");
 
+    luaL_getmetatable(L,ENV);
+    lua_pushnumber(L,MDB_RDONLY);
+    lua_setfield(L,-2,"MDB_RDONLY");
+
+
+    luaL_getmetatable(L,TXN);
+    lua_pushnumber(L,MDB_REVERSEKEY);
+    lua_setfield(L,-2,"MDB_REVERSEKEY");
+    lua_pushnumber(L,MDB_DUPSORT);
+    lua_setfield(L,-2,"MDB_DUPSORT");
+    lua_pushnumber(L,MDB_INTEGERKEY);
+    lua_setfield(L,-2,"MDB_INTEGERKEY");
+    lua_pushnumber(L,MDB_DUPFIXED);
+    lua_setfield(L,-2,"MDB_DUPFIXED");
+    lua_pushnumber(L,MDB_INTEGERDUP);
+    lua_setfield(L,-2,"MDB_INTEGERDUP");
+    lua_pushnumber(L,MDB_REVERSEDUP);
+    lua_setfield(L,-2,"MDB_REVERSEDUP");
+    lua_pushnumber(L,MDB_CREATE);
+    lua_setfield(L,-2,"MDB_CREATE");
     return 1;
 }
+
 /* globals */
 static int lmdb_version(lua_State *L) {
     const char* ver = mdb_version(NULL,NULL,NULL);

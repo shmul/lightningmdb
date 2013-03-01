@@ -32,3 +32,8 @@ print("txn",t)
 t:reset()
 t:renew()
 --t:abort()
+local db = t:dbi_open(nil,0)
+print("-- txn stat --")
+for k,v in pairs(t:stat(db)) do
+  print(k,v)
+end

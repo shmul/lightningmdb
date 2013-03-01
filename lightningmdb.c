@@ -32,22 +32,11 @@ static MDB_env* check_env(lua_State *L, int index) {
 }
 
 
-static int env_gc(lua_State *L) {
-    MDB_env* env = check_env(L,1);
-    if ( !env ) {
-        return str_error_and_out(L,"bad userdata");
-    }
-    mdb_env_close(env);
-    lua_pushnil(L);
-    lua_setmetatable(L,1);
-    return 0;
-}
-
 static int env_open(lua_State *L) {
     MDB_env* env = check_env(L,1);
     const char* path = luaL_checkstring(L,2);
-    mode_t flags = (mode_t)luaL_checknumber(L,3);
-    int mode = (int)luaL_checknumber(L,4);
+    mode_t flags = (mode_t)luaL_checkinteger(L,3);
+    int mode = luaL_checkinteger(L,4);
     int err;
 
     if ( !env || !path ) {
@@ -62,22 +51,90 @@ static int env_open(lua_State *L) {
 }
 
 static int env_copy(lua_State *L) {
-    return 0;
+    MDB_env* env = check_env(L,1);
+    const char* path = luaL_checkstring(L,2);
+    int err;
+
+    if ( !env || !path ) {
+        return str_error_and_out(L,"bad params");
+    }
+    err = mdb_env_copy(env,path);
+    if ( err ) {
+        return error_and_out(L,err);
+    }
+    lua_pushboolean(L,1);
+    return 1;
 }
 
 static int env_stat(lua_State *L) {
-    return 0;
+    MDB_env* env = check_env(L,1);
+    if ( !env ) {
+        return str_error_and_out(L,"bad params");
+    }
+    MDB_stat stat;
+    mdb_env_stat(env,&stat);
+    lua_newtable(L);
+    lua_pushnumber(L,stat.ms_psize);
+    lua_setfield(L,-2,"ms_psize");
+    lua_pushnumber(L,stat.ms_depth);
+    lua_setfield(L,-2,"ms_depth");
+    lua_pushnumber(L,stat.ms_branch_pages);
+    lua_setfield(L,-2,"ms_branch_pages");
+    lua_pushnumber(L,stat.ms_leaf_pages);
+    lua_setfield(L,-2,"ms_leaf_pages");
+    lua_pushnumber(L,stat.ms_overflow_pages);
+    lua_setfield(L,-2,"ms_overflow_pages");
+    lua_pushnumber(L,stat.ms_entries);
+    lua_setfield(L,-2,"ms_entries");
+    return 1;
 }
 
 static int env_info(lua_State *L) {
-    return 0;
+    MDB_env* env = check_env(L,1);
+    if ( !env ) {
+        return str_error_and_out(L,"bad params");
+    }
+    MDB_envinfo info;
+    mdb_env_info(env,&info);
+    lua_newtable(L);
+
+    lua_pushnumber(L,info.me_mapsize);
+    lua_setfield(L,-2,"me_mapsize");
+    lua_pushnumber(L,info.me_last_pgno);
+    lua_setfield(L,-2,"ms_last_pgno");
+    lua_pushnumber(L,info.me_last_txnid);
+    lua_setfield(L,-2,"me_last_txnid");
+    lua_pushnumber(L,info.me_maxreaders);
+    lua_setfield(L,-2,"me_maxreaders");
+    lua_pushnumber(L,info.me_numreaders);
+    lua_setfield(L,-2,"me_numreaders");
+    return 1;
+
 }
 
 static int env_sync(lua_State *L) {
-    return 0;
+    MDB_env* env = check_env(L,1);
+    int force = luaL_checkinteger(L,2);
+    int err;
+    if ( !env ) {
+        return str_error_and_out(L,"bad params");
+    }
+    err = mdb_env_sync(env,force);
+    if ( err ) {
+        return error_and_out(L,err);
+    }
+    lua_pushboolean(L,1);
+    return 1;
 }
 
 static int env_close(lua_State *L) {
+    MDB_env* env = check_env(L,1);
+    if ( !env ) {
+        return str_error_and_out(L,"bad userdata");
+    }
+    mdb_env_close(env);
+    lua_pushnil(L);
+    lua_setmetatable(L,1);
     return 0;
 }
 
@@ -111,7 +168,7 @@ static int env_set_maxdbs(lua_State *L) {
 
 
 static const luaL_reg env_methods[] = {
-    {"__gc",env_gc},
+    {"__gc",env_close},
     {"open",env_open},
     {"copy",env_copy},
     {"stat",env_stat},
@@ -180,7 +237,7 @@ static int lmdb_version(lua_State *L) {
 }
 
 static int lmdb_strerror(lua_State *L) {
-    int err = (int)luaL_checknumber(L,1);
+    int err = luaL_checkinteger(L,1);
     lua_pushstring(L,mdb_strerror(err));
     return 1;
 }

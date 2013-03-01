@@ -2,18 +2,23 @@
 # based on lpack's
 
 # change these to reflect your Lua installation
-LUA= /usr/local
+LUA=/usr/local
 LUAINC= $(LUA)/include
 LUALIB= $(LUA)/lib
 LUABIN= $(LUA)/bin
 
-# probably no need to change anything below here
-CFLAGS= $(INCS) $(WARN) -O2 $G
-WARN= -ansi -pedantic -Wall
-INCS= -I$(LUAINC)
+LMDB=/Users/shmul/dev/remotes/mdb/libraries/liblmdb/
+LMDBINC= $(LMDB)
+LMDBLIB= $(LMDB)
 
-MYNAME= lightning-mdb
-MYLIB= l$(MYNAME)
+# probably no need to change anything below here
+WARN= -pedantic -Wall
+CFLAGS= $(INCS) $(WARN) -O2 $G
+LDFLAGS= -L$(LUALIB) -L$(LMDBLIB) -llmdb -undefined dynamic_lookup
+INCS= -I$(LUAINC) -I$(LMDBINC)
+
+MYNAME= lightningmdb
+MYLIB= $(MYNAME)
 T= $(MYNAME).so
 OBJS= $(MYLIB).o
 TEST= test.lua
@@ -28,7 +33,7 @@ o:	$(MYLIB).o
 so:	$T
 
 $T:	$(OBJS)
-	$(CC) -o $@ -shared $(OBJS)
+	$(CC) -o $@ -shared $(OBJS) $(CFLAGS) $(LDFLAGS)
 
 clean:
 	rm -f $(OBJS) $T core core.* a.out

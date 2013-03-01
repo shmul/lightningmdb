@@ -1,6 +1,6 @@
 /*
-* Shmulik Regev <shmulbox@gmail.com>
-*/
+ * Shmulik Regev <shmulbox@gmail.com>
+ */
 
 #include <ctype.h>
 #include <string.h>
@@ -148,6 +148,24 @@ int env_register(lua_State* L) {
     luaL_register(L,ENV,env_methods);
     lua_settable(L,-1);
 
+    luaL_getmetatable(L,ENV);
+    lua_pushnumber(L,MDB_FIXEDMAP);
+    lua_setfield(L,-2,"MDB_FIXEDMAP");
+
+    lua_pushnumber(L,MDB_NOSUBDIR);
+    lua_setfield(L,-2,"MDB_NOSUBDIR");
+    lua_pushnumber(L,MDB_NOSYNC);
+    lua_setfield(L,-2,"MDB_NOSYNC");
+    lua_pushnumber(L,MDB_RDONLY);
+    lua_setfield(L,-2,"MDB_RDONLY");
+    lua_pushnumber(L,MDB_NOMETASYNC);
+
+    lua_setfield(L,-2,"MDB_NOMETASYNC");
+    lua_pushnumber(L,MDB_WRITEMAP);
+    lua_setfield(L,-2,"MDB_WRITEMAP");
+    lua_pushnumber(L,MDB_MAPASYNC);
+    lua_setfield(L,-2,"MDB_MAPASYNC");
+
     return 1;
 }
 
@@ -172,17 +190,17 @@ static int lmdb_env_create(lua_State *L) {
         lua_pushstring(L,mdb_strerror(err));
         return 2;
     }
-	*(MDB_env**)(lua_newuserdata(L,sizeof(MDB_env*))) = env;
+    *(MDB_env**)(lua_newuserdata(L,sizeof(MDB_env*))) = env;
     luaL_getmetatable(L,ENV);
     lua_setmetatable(L,-2);
     return 1;
 }
 
 static const luaL_reg globals[] = {
-	{"version",lmdb_version},
-	{"strerror",lmdb_strerror},
-	{"env_create",lmdb_env_create},
-	{NULL,	NULL}
+    {"version",lmdb_version},
+    {"strerror",lmdb_strerror},
+    {"env_create",lmdb_env_create},
+    {NULL,	NULL}
 };
 
 

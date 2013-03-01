@@ -21,3 +21,8 @@ for k,v in pairs(e:info()) do
 end
 
 print("get_path",e:get_path())
+
+
+--txn
+local t = e:txn_begin(nil,0)
+print("txn",t)

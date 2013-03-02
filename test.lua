@@ -3,6 +3,11 @@ require "lightningmdb"
 print("Lightning MDB version:",lightningmdb.version())
 print("Lightning error:",lightningmdb.strerror(0))
 
+print("-- globals --")
+for k,v in pairs(lightningmdb) do
+  print(k,v)
+end
+
 -- env
 local e = lightningmdb.env_create()
 print(e)

@@ -10,8 +10,13 @@
 #include "lauxlib.h"
 
 #include "lmdb.h"
+
+#define LIGHTNING "lightningmdb"
 #define ENV "lightningmdb_env"
 #define TXN "lightningmdb_txn"
+#define CURSOR "lightningmdb_cursor"
+
+#define setfield_enum(x) lua_pushnumber(L,x); lua_setfield(L,-2,#x)
 
 static int str_error_and_out(lua_State* L,const char* err) {
     lua_pushnil(L);
@@ -23,29 +28,30 @@ static int error_and_out(lua_State* L,int err) {
     return str_error_and_out(L,mdb_strerror(err));
 }
 
-static MDB_txn* check_txn(lua_State *L, int index) {
-    MDB_txn* txn;
-    luaL_checktype(L, index, LUA_TUSERDATA);
-    txn = *(MDB_txn**)luaL_checkudata(L, index, TXN);
-    if (txn == NULL) luaL_typerror(L,index,TXN);
-    return txn;
-}
-
 static int success_or_err(lua_State* L,int err) {
     if ( err ) {
         return error_and_out(L,err);
     }
-    lua_pushboolean(L,1);
+    lua_settop(L,1);
     return 1;
 }
 
-static MDB_env* check_env(lua_State *L, int index) {
-    MDB_env* env;
-    luaL_checktype(L, index, LUA_TUSERDATA);
-    env = *(MDB_env**)luaL_checkudata(L, index, ENV);
-    if (env == NULL) luaL_typerror(L,index,ENV);
-    return env;
+static int unimplemented(lua_State* L) {
+    return str_error_and_out(L,"method unimplemented");
 }
+
+#define DEFINE_check(x,NAME)                              \
+    static MDB_##x* check_##x(lua_State *L, int index) {  \
+        MDB_##x* y;                                       \
+        luaL_checktype(L, index, LUA_TUSERDATA);          \
+        y = *(MDB_##x**)luaL_checkudata(L, index, NAME);  \
+        if (y == NULL) luaL_typerror(L,index,NAME);       \
+        return y;                                         \
+    }
+
+DEFINE_check(env,ENV)
+DEFINE_check(txn,TXN)
+DEFINE_check(cursor,CURSOR)
 
 static int stat_to_table(lua_State *L,MDB_stat *stat) {
     lua_newtable(L);
@@ -62,6 +68,11 @@ static int stat_to_table(lua_State *L,MDB_stat *stat) {
     lua_pushnumber(L,stat->ms_entries);
     lua_setfield(L,-2,"ms_entries");
     return 1;
+}
+
+
+static void pop_val(lua_State* L,int index,MDB_val* val) {
+    val->mv_data = (void*)luaL_checklstring(L,index,&val->mv_size);
 }
 
 /* env */
@@ -164,23 +175,23 @@ static int env_get_path(lua_State *L) {
 }
 
 static int env_set_mapsize(lua_State *L) {
-    // TODO
-    return 0;
+// TODO
+    return unimplemented(L);
 }
 
 static int env_set_maxreaders(lua_State *L) {
-    // TODO
-    return 0;
+// TODO
+    return unimplemented(L);
 }
 
 static int env_get_maxreaders(lua_State *L) {
-    // TODO
-    return 0;
+// TODO
+    return unimplemented(L);
 }
 
 static int env_set_maxdbs(lua_State *L) {
-    // TODO
-    return 0;
+// TODO
+    return unimplemented(L);
 }
 
 static int env_txn_begin(lua_State* L) {
@@ -234,19 +245,6 @@ static const luaL_reg env_methods[] = {
 
 
 int env_register(lua_State* L) {
-/*
-  luaL_openlib(L,ENV,env_methods,0);
-  luaL_newmetatable(L,ENV);
-  luaL_openlib(L,0,env_meta,0);
-  lua_pushliteral(L,"__index");
-  lua_pushvalue(L,-3);
-  lua_rawset(L,-3);
-  lua_pushliteral(L,"__metatable");
-  lua_pushvalue(L,-3);
-  lua_rawset(L,-3);
-  lua_pop(L,1);
-*/
-
     luaL_newmetatable(L,ENV);
     lua_setglobal(L,ENV);
     luaL_register(L,ENV,env_methods);
@@ -256,25 +254,137 @@ int env_register(lua_State* L) {
     lua_setfield(L,-1,"__index");
 
     luaL_getmetatable(L,ENV);
-    lua_pushnumber(L,MDB_RDONLY);
-    lua_setfield(L,-2,"MDB_RDONLY");
-    lua_pushnumber(L,MDB_NOMETASYNC);
-    lua_setfield(L,-2,"MDB_NOMETASYNC");
-    lua_pushnumber(L,MDB_WRITEMAP);
-    lua_setfield(L,-2,"MDB_WRITEMAP");
-    lua_pushnumber(L,MDB_MAPASYNC);
-    lua_setfield(L,-2,"MDB_MAPASYNC");
-
-    lua_pushnumber(L,MDB_FIXEDMAP);
-    lua_setfield(L,-2,"MDB_FIXEDMAP");
-    lua_pushnumber(L,MDB_NOSUBDIR);
-    lua_setfield(L,-2,"MDB_NOSUBDIR");
-    lua_pushnumber(L,MDB_NOSYNC);
-    lua_setfield(L,-2,"MDB_NOSYNC");
-
+    setfield_enum(MDB_FIXEDMAP);
+    setfield_enum(MDB_NOSUBDIR);
+    setfield_enum(MDB_RDONLY);
+    setfield_enum(MDB_WRITEMAP);
+    setfield_enum(MDB_NOMETASYNC);
+    setfield_enum(MDB_NOSYNC);
+    setfield_enum(MDB_MAPASYNC);
 
     return 1;
 }
+
+/* cursor */
+static int cursor_close(lua_State *L) {
+    MDB_cursor* cursor = check_cursor(L,1);
+    mdb_cursor_close(cursor);
+    lua_pushnil(L);
+    lua_setmetatable(L,1);
+    return 0;
+}
+
+static int cursor_txn(lua_State *L) {
+    MDB_cursor* cursor = check_cursor(L,1);
+    MDB_txn* txn = mdb_cursor_txn(cursor);
+    (void)txn;
+    // TODO - we'll need a mapping from MDB_txn* to the lua userdata
+    return unimplemented(L);
+}
+
+static int cursor_dbi(lua_State *L) {
+    MDB_cursor* cursor = check_cursor(L,1);
+    MDB_dbi dbi = mdb_cursor_dbi(cursor);
+    lua_pushinteger(L,dbi);
+    return 1;
+}
+
+static int cursor_get(lua_State *L) {
+    MDB_cursor* cursor = check_cursor(L,1);
+    MDB_val k,v;
+    MDB_cursor_op op = luaL_checkinteger(L,3);
+    int err;
+    pop_val(L,2,&k);
+
+    err = mdb_cursor_get(cursor,&k,&v,op);
+    switch (err) {
+    case MDB_NOTFOUND:
+        lua_pushnil(L);
+        return 1;
+    case 0:
+        lua_pushlstring(L,v.mv_data,v.mv_size);
+        return 1;
+    }
+    return error_and_out(L,err);
+}
+
+static int cursor_put(lua_State *L) {
+    MDB_cursor* cursor = check_cursor(L,1);
+    MDB_val k,v;
+    unsigned int flags = luaL_checkinteger(L,4);
+    int err;
+    pop_val(L,2,&k);
+    pop_val(L,3,&v);
+
+    err = mdb_cursor_put(cursor,&k,&v,flags);
+    return success_or_err(L,err);
+}
+
+static int cursor_del(lua_State *L) {
+    MDB_cursor* cursor = check_cursor(L,1);
+    unsigned int flags = luaL_checkinteger(L,2);
+    int err = mdb_cursor_del(cursor,flags);
+    return success_or_err(L,err);
+}
+
+static int cursor_count(lua_State *L) {
+    MDB_cursor* cursor = check_cursor(L,1);
+    size_t count = 0;
+    int err = mdb_cursor_count(cursor,&count);
+    if ( err ) {
+        return error_and_out(L,err);
+    }
+    lua_pushinteger(L,count);
+    return 1;
+}
+
+static const luaL_reg cursor_methods[] = {
+    {"__gc",cursor_close},
+    {"close",cursor_close},
+    {"txn",cursor_txn},
+    {"dbi",cursor_dbi},
+    {"get",cursor_get},
+    {"put",cursor_put},
+    {"del",cursor_del},
+    {"count",cursor_count},
+
+    {0,0}
+};
+
+int cursor_register(lua_State* L) {
+
+    luaL_newmetatable(L,CURSOR);
+    lua_setglobal(L,CURSOR);
+    luaL_register(L,CURSOR,cursor_methods);
+    lua_settable(L,-1);
+
+    luaL_getmetatable(L,CURSOR);
+    lua_setfield(L,-1,"__index");
+
+    luaL_getmetatable(L,CURSOR);
+
+    setfield_enum(MDB_FIRST);
+    setfield_enum(MDB_FIRST_DUP);
+    setfield_enum(MDB_GET_BOTH);
+    setfield_enum(MDB_GET_BOTH_RANGE);
+    setfield_enum(MDB_GET_CURRENT);
+    setfield_enum(MDB_GET_MULTIPLE);
+    setfield_enum(MDB_LAST);
+    setfield_enum(MDB_LAST_DUP);
+    setfield_enum(MDB_NEXT);
+    setfield_enum(MDB_NEXT_DUP);
+    setfield_enum(MDB_NEXT_MULTIPLE);
+    setfield_enum(MDB_NEXT_NODUP);
+    setfield_enum(MDB_PREV);
+    setfield_enum(MDB_PREV_DUP);
+    setfield_enum(MDB_PREV_NODUP);
+    setfield_enum(MDB_SET);
+    setfield_enum(MDB_SET_KEY);
+    setfield_enum(MDB_SET_RANGE );
+
+    return 1;
+}
+
 
 /* txn */
 
@@ -343,10 +453,6 @@ static int txn_dbi_drop(lua_State* L) {
     return success_or_err(L,err);
 }
 
-static void pop_val(lua_State* L,int index,MDB_val* val) {
-    val->mv_data = (void*)luaL_checklstring(L,index,&val->mv_size);
-}
-
 static int txn_get(lua_State* L) {
     MDB_txn* txn = check_txn(L,1);
     MDB_dbi dbi = luaL_checkinteger(L,2);
@@ -370,10 +476,10 @@ static int txn_put(lua_State* L) {
     MDB_txn* txn = check_txn(L,1);
     MDB_dbi dbi = luaL_checkinteger(L,2);
     MDB_val k,v;
-    pop_val(L,3,&k);
-    pop_val(L,4,&v);
     unsigned int flags = luaL_checkinteger(L,5);
     int err;
+    pop_val(L,3,&k);
+    pop_val(L,4,&v);
 
     err = mdb_put(txn,dbi,&k,&v,flags);
     return success_or_err(L,err);
@@ -383,11 +489,33 @@ static int txn_del(lua_State* L) {
     MDB_txn* txn = check_txn(L,1);
     MDB_dbi dbi = luaL_checkinteger(L,2);
     MDB_val k,v;
+    int err;
     pop_val(L,3,&k);
     pop_val(L,4,&v);
-    int err;
 
     err = mdb_del(txn,dbi,&k,&v);
+    return success_or_err(L,err);
+}
+
+static int txn_cursor_open(lua_State* L) {
+    MDB_txn* txn = check_txn(L,1);
+    MDB_dbi dbi = luaL_checkinteger(L,2);
+    MDB_cursor* cursor;
+    int err = mdb_cursor_open(txn,dbi,&cursor);
+    if ( err ) {
+        return error_and_out(L,err);
+    }
+
+    *(MDB_cursor**)(lua_newuserdata(L,sizeof(MDB_cursor*))) = cursor;
+    luaL_getmetatable(L,CURSOR);
+    lua_setmetatable(L,-2);
+    return 1;
+}
+
+static int txn_cursor_renew(lua_State *L) {
+    MDB_txn* txn = check_txn(L,1);
+    MDB_cursor* cursor = check_cursor(L,2);
+    int err = mdb_cursor_renew(txn,cursor);
     return success_or_err(L,err);
 }
 
@@ -404,6 +532,8 @@ static const luaL_reg txn_methods[] = {
     {"get",txn_get},
     {"put",txn_put},
     {"del",txn_del},
+    {"cursor_open",txn_cursor_open},
+    {"cursor_renew",txn_cursor_renew},
     {0,0}
 };
 
@@ -418,26 +548,15 @@ int txn_register(lua_State* L) {
     luaL_getmetatable(L,TXN);
     lua_setfield(L,-1,"__index");
 
-    luaL_getmetatable(L,ENV);
-    lua_pushnumber(L,MDB_RDONLY);
-    lua_setfield(L,-2,"MDB_RDONLY");
-
 
     luaL_getmetatable(L,TXN);
-    lua_pushnumber(L,MDB_REVERSEKEY);
-    lua_setfield(L,-2,"MDB_REVERSEKEY");
-    lua_pushnumber(L,MDB_DUPSORT);
-    lua_setfield(L,-2,"MDB_DUPSORT");
-    lua_pushnumber(L,MDB_INTEGERKEY);
-    lua_setfield(L,-2,"MDB_INTEGERKEY");
-    lua_pushnumber(L,MDB_DUPFIXED);
-    lua_setfield(L,-2,"MDB_DUPFIXED");
-    lua_pushnumber(L,MDB_INTEGERDUP);
-    lua_setfield(L,-2,"MDB_INTEGERDUP");
-    lua_pushnumber(L,MDB_REVERSEDUP);
-    lua_setfield(L,-2,"MDB_REVERSEDUP");
-    lua_pushnumber(L,MDB_CREATE);
-    lua_setfield(L,-2,"MDB_CREATE");
+    setfield_enum(MDB_REVERSEKEY);
+    setfield_enum(MDB_DUPSORT);
+    setfield_enum(MDB_INTEGERKEY);
+    setfield_enum(MDB_DUPFIXED);
+    setfield_enum(MDB_INTEGERDUP);
+    setfield_enum(MDB_REVERSEDUP);
+    setfield_enum(MDB_CREATE);
     return 1;
 }
 
@@ -479,9 +598,19 @@ static const luaL_reg globals[] = {
 
 int luaopen_lightningmdb(lua_State *L) {
     luaL_register(L,
-                  "lightningmdb",
+                  LIGHTNING,
                   globals);
+
+    setfield_enum(MDB_NOOVERWRITE);
+    setfield_enum(MDB_NODUPDATA);
+    setfield_enum(MDB_CURRENT);
+    setfield_enum(MDB_RESERVE);
+    setfield_enum(MDB_APPEND);
+    setfield_enum(MDB_APPENDDUP);
+    setfield_enum(MDB_MULTIPLE);
+
     env_register(L);
     txn_register(L);
+    cursor_register(L);
     return 0;
 }

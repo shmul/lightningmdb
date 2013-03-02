@@ -12,9 +12,16 @@ LMDBINC= $(LMDB)
 LMDBLIB= $(LMDB)
 
 # probably no need to change anything below here
+platform=$(shell uname)
+
+ifeq ($(platform),Darwin)
+  PLATFORM_LDFLAGS= -undefined dynamic_lookup
+else
+  PLATFORM_LDFLAGS=
+endif
 WARN= -pedantic -Wall
 CFLAGS= $(INCS) $(WARN) -O2 $G
-LDFLAGS= -L$(LUALIB) -L$(LMDBLIB) -llmdb -undefined dynamic_lookup
+LDFLAGS= -L$(LUALIB) -L$(LMDBLIB) -llmdb $(PLATFORM_LDFLAGS)
 INCS= -I$(LUAINC) -I$(LMDBINC)
 
 MYNAME= lightningmdb
@@ -44,17 +51,15 @@ doc:
 
 # distribution
 
-FTP= $(HOME)/public/ftp/lua/5.1
 D= $(MYNAME)
 A= $(MYLIB).tar.gz
-TOTAR= Makefile,README,$(MYLIB).c,test.lua
+TOTAR= Makefile,README.md,$(MYLIB).c,test*.lua
 
 tar:	clean
 	tar zcvf $A -C .. $D/{$(TOTAR)}
 
 distr:	tar
 	touch -r $A .stamp
-	mv $A $(FTP)
 
 diff:	clean
 	tar zxf $(FTP)/$A

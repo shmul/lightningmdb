@@ -13,6 +13,7 @@
  typedef luaL_reg lua_reg_t;
 # define lua_type_error luaL_typerror
 void lua_set_funcs(lua_State *L, const char *libname,const lua_reg_t *l) {
+    lua_setglobal(L,libname);
     luaL_register(L,libname,l);
 }
 
@@ -615,6 +616,7 @@ static int lmdb_env_create(lua_State *L) {
         lua_pushstring(L,mdb_strerror(err));
         return 2;
     }
+
     *(MDB_env**)(lua_newuserdata(L,sizeof(MDB_env*))) = env;
     luaL_getmetatable(L,ENV);
     lua_setmetatable(L,-2);

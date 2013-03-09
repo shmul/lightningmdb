@@ -17,7 +17,8 @@ pt(lightningmdb)
 -- env
 local e = lightningmdb.env_create()
 print(e)
-print(e:open("./temp/foo",0,436)) -- 436== octal 664
+os.execute("mkdir ./temp/foo")
+print(e:open("./temp/foo",0,420))
 print("fixedmap",e.MDB_FIXEDMAP)
 print("read only",e.MDB_RDONLY)
 

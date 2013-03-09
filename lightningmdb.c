@@ -5,6 +5,8 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "lmdb.h"
+
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
@@ -12,25 +14,23 @@
 #if LUA_VERSION_NUM<=501
  typedef luaL_reg lua_reg_t;
 # define lua_type_error luaL_typerror
-void lua_set_funcs(lua_State *L, const char *libname,const lua_reg_t *l) {
-    lua_setglobal(L,libname);
-    luaL_register(L,libname,l);
-}
+ void lua_set_funcs(lua_State *L, const char *libname,const lua_reg_t *l) {
+     lua_setglobal(L,libname);
+     luaL_register(L,libname,l);
+ }
 
 #else
  typedef luaL_Reg lua_reg_t;
-void lua_set_funcs(lua_State *L, const char *libname,const lua_reg_t *l) {
-    luaL_setfuncs(L,l,0);
-}
-int lua_type_error(lua_State *L,int narg,const char *tname) {
-  const char *msg = lua_pushfstring(L, "%s expected, got %s",
+ void lua_set_funcs(lua_State *L, const char *libname,const lua_reg_t *l) {
+     luaL_setfuncs(L,l,0);
+ }
+ int lua_type_error(lua_State *L,int narg,const char *tname) {
+     const char *msg = lua_pushfstring(L, "%s expected, got %s",
                                     tname, luaL_typename(L, narg));
-  return luaL_argerror(L, narg, msg);
-}
-
+     return luaL_argerror(L, narg, msg);
+ }
 #endif
 
-#include "lmdb.h"
 
 #define LIGHTNING "lightningmdb"
 #define ENV "lightningmdb_env"
@@ -92,8 +92,12 @@ static int stat_to_table(lua_State *L,MDB_stat *stat) {
 }
 
 
-static void pop_val(lua_State* L,int index,MDB_val* val) {
+static MDB_val* pop_val(lua_State* L,int index,MDB_val* val) {
+    if ( lua_isnil(L,index) ) {
+        return NULL;
+    }
     val->mv_data = (void*)luaL_checklstring(L,index,&val->mv_size);
+    return val;
 }
 
 /* env */
@@ -196,8 +200,10 @@ static int env_get_path(lua_State *L) {
 }
 
 static int env_set_mapsize(lua_State *L) {
-// TODO
-    return unimplemented(L);
+    MDB_env* env = check_env(L,1);
+    size_t size = luaL_checkinteger(L,2);
+    int err = mdb_env_set_mapsize(env,size);
+    return success_or_err(L,err);
 }
 
 static int env_set_maxreaders(lua_State *L) {
@@ -211,19 +217,22 @@ static int env_get_maxreaders(lua_State *L) {
 }
 
 static int env_set_maxdbs(lua_State *L) {
-// TODO
-    return unimplemented(L);
+    MDB_env* env = check_env(L,1);
+    int num = luaL_checkinteger(L,2);
+    int err = mdb_env_set_maxdbs(env,num);
+    return success_or_err(L,err);
 }
 
 static int env_txn_begin(lua_State* L) {
     MDB_env* env = check_env(L,1);
-    MDB_txn* parent = !lua_isnil(L,2) ? check_txn(L,2) : NULL;
+    MDB_txn* parent = lua_isnil(L,2) ? NULL : check_txn(L,2);
     unsigned int flags = luaL_checkinteger(L,3);
     int err;
     MDB_txn* txn;
     if ( !env ) {
         return str_error_and_out(L,"bad params");
     }
+
     err = mdb_txn_begin(env,parent,flags,&txn);
     if ( err ) {
         return error_and_out(L,err);
@@ -313,15 +322,15 @@ static int cursor_get(lua_State *L) {
     MDB_cursor_op op = luaL_checkinteger(L,3);
     int err;
     pop_val(L,2,&k);
-
     err = mdb_cursor_get(cursor,&k,&v,op);
     switch (err) {
     case MDB_NOTFOUND:
         lua_pushnil(L);
         return 1;
     case 0:
+        lua_pushlstring(L,k.mv_data,k.mv_size);
         lua_pushlstring(L,v.mv_data,v.mv_size);
-        return 1;
+        return 2;
     }
     return error_and_out(L,err);
 }
@@ -333,7 +342,6 @@ static int cursor_put(lua_State *L) {
     int err;
     pop_val(L,2,&k);
     pop_val(L,3,&v);
-
     err = mdb_cursor_put(cursor,&k,&v,flags);
     return success_or_err(L,err);
 }
@@ -440,7 +448,7 @@ static int txn_renew(lua_State* L) {
 
 static int txn_dbi_open(lua_State* L) {
     MDB_txn* txn = check_txn(L,1);
-    const char* name = !lua_isnil(L,2) ? luaL_checkstring(L,2) : NULL;
+    const char* name = lua_isnil(L,2) ? NULL : luaL_checkstring(L,2);
     unsigned int flags = luaL_checkinteger(L,3);
 		MDB_dbi dbi;
     int err = mdb_dbi_open(txn,name,flags,&dbi);
@@ -472,10 +480,9 @@ static int txn_get(lua_State* L) {
     MDB_txn* txn = check_txn(L,1);
     MDB_dbi dbi = luaL_checkinteger(L,2);
     MDB_val k,v;
-    pop_val(L,3,&k);
-
     int err;
-    err = mdb_get(txn,dbi,&k,&v);
+
+    err = mdb_get(txn,dbi,pop_val(L,3,&k),&v);
     switch (err) {
     case MDB_NOTFOUND:
         lua_pushnil(L);
@@ -493,10 +500,8 @@ static int txn_put(lua_State* L) {
     MDB_val k,v;
     unsigned int flags = luaL_checkinteger(L,5);
     int err;
-    pop_val(L,3,&k);
-    pop_val(L,4,&v);
 
-    err = mdb_put(txn,dbi,&k,&v,flags);
+    err = mdb_put(txn,dbi,pop_val(L,3,&k),pop_val(L,4,&v),flags);
     return success_or_err(L,err);
 }
 
@@ -506,9 +511,7 @@ static int txn_del(lua_State* L) {
     MDB_val k,v;
     int err;
     pop_val(L,3,&k);
-    pop_val(L,4,&v);
-
-    err = mdb_del(txn,dbi,&k,&v);
+    err = mdb_del(txn,dbi,&k,pop_val(L,4,&v));
     return success_or_err(L,err);
 }
 

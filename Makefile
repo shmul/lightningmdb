@@ -28,7 +28,7 @@ else
   PLATFORM_LDFLAGS=
 endif
 WARN= -pedantic -Wall
-CFLAGS= $(INCS) $(WARN) -O2 $G
+CFLAGS= $(INCS) $(WARN) $G -g -O2
 LDFLAGS= -L$(LUALIB) -L$(LMDBLIB) -llmdb $(PLATFORM_LDFLAGS)
 INCS= -I$(LUAINC) -I$(LMDBINC)
 

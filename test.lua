@@ -1,12 +1,18 @@
-local lightningmdb=require "lightningmdb"
+local lightningmdb_lib=require "lightningmdb"
+
+local lightningmdb = _VERSION=="Lua 5.2" and lightningmdb_lib or lightningmdb
+
+local function pt(t)
+  for k,v in pairs(t) do
+    print(k,v)
+  end
+end
 
 print("Lightning MDB version:",lightningmdb.version())
 print("Lightning error:",lightningmdb.strerror(0))
 
 print("-- globals --")
-for k,v in pairs(lightningmdb) do
-  print(k,v)
-end
+pt(lightningmdb)
 
 -- env
 local e = lightningmdb.env_create()
@@ -16,15 +22,10 @@ print("fixedmap",e.MDB_FIXEDMAP)
 print("read only",e.MDB_RDONLY)
 
 print("-- stats --")
-for k,v in pairs(e:stat()) do
-  print(k,v)
-end
+pt(e:stat())
 
 print("-- info --")
-for k,v in pairs(e:info()) do
-  print(k,v)
-end
-
+pt(e:info())
 print("get_path",e:get_path())
 
 
@@ -39,6 +40,4 @@ t:renew()
 --t:abort()
 local db = t:dbi_open(nil,0)
 print("-- txn stat --")
-for k,v in pairs(t:stat(db)) do
-  print(k,v)
-end
+pt(t:stat(db))

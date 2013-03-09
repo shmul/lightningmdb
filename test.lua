@@ -1,4 +1,4 @@
-require "lightningmdb"
+local lightningmdb=require "lightningmdb"
 
 print("Lightning MDB version:",lightningmdb.version())
 print("Lightning error:",lightningmdb.strerror(0))
@@ -12,8 +12,8 @@ end
 local e = lightningmdb.env_create()
 print(e)
 print(e:open("./temp/foo",0,436)) -- 436== octal 664
-print("fixedmap",lightningmdb_env.MDB_FIXEDMAP)
-print("read only",lightningmdb_env.MDB_RDONLY)
+print("fixedmap",e.MDB_FIXEDMAP)
+print("read only",e.MDB_RDONLY)
 
 print("-- stats --")
 for k,v in pairs(e:stat()) do

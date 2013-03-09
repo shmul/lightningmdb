@@ -9,6 +9,26 @@
 #include "lualib.h"
 #include "lauxlib.h"
 
+#if LUA_VERSION_NUM<=501
+ typedef luaL_reg lua_reg_t;
+# define lua_type_error luaL_typerror
+void lua_set_funcs(lua_State *L, const char *libname,const lua_reg_t *l) {
+    luaL_register(L,libname,l);
+}
+
+#else
+ typedef luaL_Reg lua_reg_t;
+void lua_set_funcs(lua_State *L, const char *libname,const lua_reg_t *l) {
+    luaL_setfuncs(L,l,0);
+}
+int lua_type_error(lua_State *L,int narg,const char *tname) {
+  const char *msg = lua_pushfstring(L, "%s expected, got %s",
+                                    tname, luaL_typename(L, narg));
+  return luaL_argerror(L, narg, msg);
+}
+
+#endif
+
 #include "lmdb.h"
 
 #define LIGHTNING "lightningmdb"
@@ -45,7 +65,7 @@ static int unimplemented(lua_State* L) {
         MDB_##x* y;                                       \
         luaL_checktype(L, index, LUA_TUSERDATA);          \
         y = *(MDB_##x**)luaL_checkudata(L, index, NAME);  \
-        if (y == NULL) luaL_typerror(L,index,NAME);       \
+        if (y == NULL) lua_type_error(L,index,NAME);      \
         return y;                                         \
     }
 
@@ -223,7 +243,7 @@ static int env_dbi_close(lua_State* L) {
 }
 
 
-static const luaL_reg env_methods[] = {
+static const lua_reg_t env_methods[] = {
     {"__gc",env_close},
     {"open",env_open},
     {"copy",env_copy},
@@ -244,10 +264,9 @@ static const luaL_reg env_methods[] = {
 };
 
 
-int env_register(lua_State* L) {
+void env_register(lua_State* L) {
     luaL_newmetatable(L,ENV);
-    lua_setglobal(L,ENV);
-    luaL_register(L,ENV,env_methods);
+    lua_set_funcs(L,ENV,env_methods);
     lua_settable(L,-1);
 
     luaL_getmetatable(L,ENV);
@@ -261,8 +280,6 @@ int env_register(lua_State* L) {
     setfield_enum(MDB_NOMETASYNC);
     setfield_enum(MDB_NOSYNC);
     setfield_enum(MDB_MAPASYNC);
-
-    return 1;
 }
 
 /* cursor */
@@ -338,7 +355,7 @@ static int cursor_count(lua_State *L) {
     return 1;
 }
 
-static const luaL_reg cursor_methods[] = {
+static const lua_reg_t cursor_methods[] = {
     {"__gc",cursor_close},
     {"close",cursor_close},
     {"txn",cursor_txn},
@@ -351,11 +368,10 @@ static const luaL_reg cursor_methods[] = {
     {0,0}
 };
 
-int cursor_register(lua_State* L) {
+void cursor_register(lua_State* L) {
 
     luaL_newmetatable(L,CURSOR);
-    lua_setglobal(L,CURSOR);
-    luaL_register(L,CURSOR,cursor_methods);
+    lua_set_funcs(L,CURSOR,cursor_methods);
     lua_settable(L,-1);
 
     luaL_getmetatable(L,CURSOR);
@@ -381,8 +397,6 @@ int cursor_register(lua_State* L) {
     setfield_enum(MDB_SET);
     setfield_enum(MDB_SET_KEY);
     setfield_enum(MDB_SET_RANGE );
-
-    return 1;
 }
 
 
@@ -539,7 +553,7 @@ static int txn_cursor_renew(lua_State *L) {
     return success_or_err(L,err);
 }
 
-static const luaL_reg txn_methods[] = {
+static const lua_reg_t txn_methods[] = {
     {"__gc",txn_abort}, /* if the transaction is properly committed, the sensible thing
                          * would be to abort it in gc */
     {"commit",txn_commit},
@@ -560,11 +574,9 @@ static const luaL_reg txn_methods[] = {
 };
 
 
-int txn_register(lua_State* L) {
-
+void txn_register(lua_State* L) {
     luaL_newmetatable(L,TXN);
-    lua_setglobal(L,TXN);
-    luaL_register(L,TXN,txn_methods);
+    lua_set_funcs(L,TXN,txn_methods);
     lua_settable(L,-1);
 
     luaL_getmetatable(L,TXN);
@@ -579,7 +591,7 @@ int txn_register(lua_State* L) {
     setfield_enum(MDB_INTEGERDUP);
     setfield_enum(MDB_REVERSEDUP);
     setfield_enum(MDB_CREATE);
-    return 1;
+
 }
 
 /* globals */
@@ -609,7 +621,7 @@ static int lmdb_env_create(lua_State *L) {
     return 1;
 }
 
-static const luaL_reg globals[] = {
+static const lua_reg_t globals[] = {
     {"version",lmdb_version},
     {"strerror",lmdb_strerror},
     {"env_create",lmdb_env_create},
@@ -619,10 +631,9 @@ static const luaL_reg globals[] = {
 
 
 int luaopen_lightningmdb(lua_State *L) {
-    luaL_register(L,
-                  LIGHTNING,
-                  globals);
 
+    luaL_newmetatable(L,LIGHTNING);
+    lua_set_funcs(L,LIGHTNING,globals);
     setfield_enum(MDB_NOOVERWRITE);
     setfield_enum(MDB_NODUPDATA);
     setfield_enum(MDB_CURRENT);
@@ -634,5 +645,6 @@ int luaopen_lightningmdb(lua_State *L) {
     env_register(L);
     txn_register(L);
     cursor_register(L);
-    return 0;
+    luaL_getmetatable(L,LIGHTNING);
+    return 1;
 }

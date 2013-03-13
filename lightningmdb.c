@@ -647,6 +647,24 @@ int luaopen_lightningmdb(lua_State *L) {
     setfield_enum(MDB_APPENDDUP);
     setfield_enum(MDB_MULTIPLE);
 
+    setfield_enum(MDB_SUCCESS);
+    setfield_enum(MDB_KEYEXIST);
+    setfield_enum(MDB_NOTFOUND);
+    setfield_enum(MDB_PAGE_NOTFOUND);
+    setfield_enum(MDB_CORRUPTED);
+    setfield_enum(MDB_PANIC);
+    setfield_enum(MDB_VERSION_MISMATCH);
+    setfield_enum(MDB_INVALID);
+    setfield_enum(MDB_MAP_FULL);
+    setfield_enum(MDB_DBS_FULL);
+    setfield_enum(MDB_READERS_FULL);
+    setfield_enum(MDB_TLS_FULL);
+    setfield_enum(MDB_TXN_FULL);
+    setfield_enum(MDB_CURSOR_FULL);
+    setfield_enum(MDB_PAGE_FULL);
+    setfield_enum(MDB_MAP_RESIZED);
+    setfield_enum(MDB_INCOMPATIBLE);
+
     env_register(L);
     txn_register(L);
     cursor_register(L);

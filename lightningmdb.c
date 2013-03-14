@@ -46,7 +46,9 @@ static int str_error_and_out(lua_State* L,const char* err) {
 }
 
 static int error_and_out(lua_State* L,int err) {
-    return str_error_and_out(L,mdb_strerror(err));
+    str_error_and_out(L,mdb_strerror(err));
+    lua_pushinteger(L,err);
+    return 3;
 }
 
 static int success_or_err(lua_State* L,int err) {
@@ -281,15 +283,6 @@ void env_register(lua_State* L) {
 
     luaL_getmetatable(L,ENV);
     lua_setfield(L,-1,"__index");
-
-    luaL_getmetatable(L,ENV);
-    setfield_enum(MDB_FIXEDMAP);
-    setfield_enum(MDB_NOSUBDIR);
-    setfield_enum(MDB_RDONLY);
-    setfield_enum(MDB_WRITEMAP);
-    setfield_enum(MDB_NOMETASYNC);
-    setfield_enum(MDB_NOSYNC);
-    setfield_enum(MDB_MAPASYNC);
 }
 
 /* cursor */
@@ -385,27 +378,6 @@ void cursor_register(lua_State* L) {
 
     luaL_getmetatable(L,CURSOR);
     lua_setfield(L,-1,"__index");
-
-    luaL_getmetatable(L,CURSOR);
-
-    setfield_enum(MDB_FIRST);
-    setfield_enum(MDB_FIRST_DUP);
-    setfield_enum(MDB_GET_BOTH);
-    setfield_enum(MDB_GET_BOTH_RANGE);
-    setfield_enum(MDB_GET_CURRENT);
-    setfield_enum(MDB_GET_MULTIPLE);
-    setfield_enum(MDB_LAST);
-    setfield_enum(MDB_LAST_DUP);
-    setfield_enum(MDB_NEXT);
-    setfield_enum(MDB_NEXT_DUP);
-    setfield_enum(MDB_NEXT_MULTIPLE);
-    setfield_enum(MDB_NEXT_NODUP);
-    setfield_enum(MDB_PREV);
-    setfield_enum(MDB_PREV_DUP);
-    setfield_enum(MDB_PREV_NODUP);
-    setfield_enum(MDB_SET);
-    setfield_enum(MDB_SET_KEY);
-    setfield_enum(MDB_SET_RANGE );
 }
 
 
@@ -587,15 +559,6 @@ void txn_register(lua_State* L) {
     lua_setfield(L,-1,"__index");
 
 
-    luaL_getmetatable(L,TXN);
-    setfield_enum(MDB_REVERSEKEY);
-    setfield_enum(MDB_DUPSORT);
-    setfield_enum(MDB_INTEGERKEY);
-    setfield_enum(MDB_DUPFIXED);
-    setfield_enum(MDB_INTEGERDUP);
-    setfield_enum(MDB_REVERSEDUP);
-    setfield_enum(MDB_CREATE);
-
 }
 
 /* globals */
@@ -664,6 +627,41 @@ int luaopen_lightningmdb(lua_State *L) {
     setfield_enum(MDB_PAGE_FULL);
     setfield_enum(MDB_MAP_RESIZED);
     setfield_enum(MDB_INCOMPATIBLE);
+
+    setfield_enum(MDB_REVERSEKEY);
+    setfield_enum(MDB_DUPSORT);
+    setfield_enum(MDB_INTEGERKEY);
+    setfield_enum(MDB_DUPFIXED);
+    setfield_enum(MDB_INTEGERDUP);
+    setfield_enum(MDB_REVERSEDUP);
+    setfield_enum(MDB_CREATE);
+
+    setfield_enum(MDB_FIXEDMAP);
+    setfield_enum(MDB_NOSUBDIR);
+    setfield_enum(MDB_RDONLY);
+    setfield_enum(MDB_WRITEMAP);
+    setfield_enum(MDB_NOMETASYNC);
+    setfield_enum(MDB_NOSYNC);
+    setfield_enum(MDB_MAPASYNC);
+
+    setfield_enum(MDB_FIRST);
+    setfield_enum(MDB_FIRST_DUP);
+    setfield_enum(MDB_GET_BOTH);
+    setfield_enum(MDB_GET_BOTH_RANGE);
+    setfield_enum(MDB_GET_CURRENT);
+    setfield_enum(MDB_GET_MULTIPLE);
+    setfield_enum(MDB_LAST);
+    setfield_enum(MDB_LAST_DUP);
+    setfield_enum(MDB_NEXT);
+    setfield_enum(MDB_NEXT_DUP);
+    setfield_enum(MDB_NEXT_MULTIPLE);
+    setfield_enum(MDB_NEXT_NODUP);
+    setfield_enum(MDB_PREV);
+    setfield_enum(MDB_PREV_DUP);
+    setfield_enum(MDB_PREV_NODUP);
+    setfield_enum(MDB_SET);
+    setfield_enum(MDB_SET_KEY);
+    setfield_enum(MDB_SET_RANGE );
 
     env_register(L);
     txn_register(L);

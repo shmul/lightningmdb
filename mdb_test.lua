@@ -7,6 +7,12 @@ local function pt(t)
   end
 end
 
+local function ps(e)
+  print("--- env stat")
+  pt(e:stat())
+  print("---")
+end
+
 local function cursor_pairs(cursor_,key_,op_)
   return coroutine.wrap(
     function()
@@ -48,9 +54,7 @@ local function mtest()
 
   print(j,"duplicates skipped")
   t:commit()
-  print("--- env stat")
-  pt(e:stat())
-  print("---")
+  ps(e)
 
   t = e:txn_begin(nil,0)
   c = t:cursor_open(d)
@@ -78,10 +82,7 @@ local function mtest()
   end
 
   print("deleted",j,"values")
-
-  print("--- env stat")
-  pt(e:stat())
-  print("---")
+  ps(e)
   t = e:txn_begin(nil,0)
   c = t:cursor_open(d)
   print("cursor next")
@@ -117,8 +118,8 @@ local function mtest2()
   local e = lightningmdb.env_create()
   e:set_mapsize(10485760)
   e:set_maxdbs(4)
-  os.execute("mkdir ./temp/testdb2")
-  e:open("./temp/testdb2",e.MDB_FIXEDMAP + e.MDB_NOSYNC,420)
+  os.execute("mkdir ./temp/testdb")
+  e:open("./temp/testdb",e.MDB_FIXEDMAP + e.MDB_NOSYNC,420)
   local t = e:txn_begin(nil,0)
   local d = t:dbi_open("id1",t.MDB_CREATE)
 
@@ -134,9 +135,7 @@ local function mtest2()
 
   print(j,"duplicates skipped")
   t:commit()
-  print("--- env stat")
-  pt(e:stat())
-  print("---")
+  ps(e)
 
   t = e:txn_begin(nil,0)
   c = t:cursor_open(d)
@@ -165,9 +164,7 @@ local function mtest2()
 
   print("deleted",j,"values")
 
-  print("--- env stat")
-  pt(e:stat())
-  print("---")
+  ps(e)
   t = e:txn_begin(nil,0)
   c = t:cursor_open(d)
   print("cursor next")
@@ -190,5 +187,53 @@ local function mtest2()
   e:close()
 end
 
+local function mtest3()
+  print("--- mtest3")
+
+  local count = math.random(10)+15
+  local values = {}
+  math.randomseed(os.time())
+  for i=1,count do
+    values[i] = math.random(1024)
+  end
+
+  local e = lightningmdb.env_create()
+  e:set_mapsize(10485760)
+  e:set_maxdbs(4)
+  os.execute("mkdir ./temp/testdb")
+  e:open("./temp/testdb",e.MDB_FIXEDMAP + e.MDB_NOSYNC,420)
+
+  local t = e:txn_begin(nil,0)
+  local d = t:dbi_open("id2",t.MDB_CREATE+t.MDB_DUPSORT)
+
+  print("adding values:",count)
+  local j = 0
+  for i,v in ipairs(values) do
+    if i%5==0 then
+      v = values[i-1]
+    end
+    local rc = t:put(d,string.format("%03x",v),string.format("%d foo bar",v),
+                     lightningmdb.MDB_NODUPDATA)
+    if not rc then
+      j = j + 1
+    end
+  end
+  if j>0 then
+    print("duplicate skipped",j)
+  end
+  t:commit()
+  ps(e)
+
+  t = e:txn_begin(nil,0)
+  c = t:cursor_open(d)
+
+  for k,v in cursor_pairs(c,nil,c.MDB_NEXT) do
+    print(k,v)
+  end
+
+end
+
+
 mtest()
 mtest2()
+mtest3()

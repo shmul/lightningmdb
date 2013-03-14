@@ -21,6 +21,8 @@ Every attempt was made to honor the original naming convention. The documentatio
 
 5 lua _objects_ are wrapping the access to the DB. Their mappings to the LMDB functions/constants is provided below.
 
+The (Lua) tests files provide usage reference. Some of them are direct translation of LMDB's test files.
+
 ## lightningmdb
 All the LMDB enums and defines are available through this table as well as the following functions:
 

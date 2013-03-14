@@ -1,6 +1,6 @@
 # General
 
-Lightningdbm is a thin wrapper around [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/mdb/) which is distributed under the OpenLDAP Public license (reproduced below).
+Lightningdbm is a thin wrapper around [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/mdb/) .
 
 
 # Installation
@@ -78,7 +78,9 @@ All the LMDB enums and defines are available through this table as well as the f
 
 # License
 
-Lightningdbm is distributed under the MIT license reproduced below.
+* Lightningdbm is distributed under the MIT license.
+* [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/mdb/) is distributed under the OpenLDAP Public license.
+
 
 ## MIT License
 Copyright (c) 2012 Trusteer Ltd.

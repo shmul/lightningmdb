@@ -22,13 +22,20 @@ LMDBLIB= $(LMDB)
 # probably no need to change anything below here
 platform=$(shell uname)
 
+ifeq ($(platform),Linux)
+  PLATFORM_CFLAGS= -fPIC
+else
+  PLATFORM_CFLAGS=
+endif
+
 ifeq ($(platform),Darwin)
   PLATFORM_LDFLAGS= -undefined dynamic_lookup
 else
   PLATFORM_LDFLAGS=
 endif
+
 WARN= -pedantic -Wall
-CFLAGS= $(INCS) $(WARN) $G -g -O2
+CFLAGS= $(INCS) $(WARN) $G -g -O2 $(PLATFORM_CFLAGS)
 LDFLAGS= -L$(LUALIB) -L$(LMDBLIB) -llmdb $(PLATFORM_LDFLAGS)
 INCS= -I$(LUAINC) -I$(LMDBINC)
 

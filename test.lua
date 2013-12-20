@@ -18,7 +18,7 @@ local function basic_test()
   -- env
   local e = lightningmdb.env_create()
   print(e)
-  os.execute("mkdir ./temp/foo")
+  os.execute("mkdir -p ./temp/foo")
   print(e:open("./temp/foo",0,420))
   print("fixedmap",lightningmdb.MDB_FIXEDMAP)
   print("read only",lightningmdb.MDB_RDONLY)

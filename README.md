@@ -76,8 +76,8 @@ All the LMDB enums and defines are available through this table as well as the f
 ## lpack
 As a utility, [LHF's lpack](http://www.tecgraf.puc-rio.br/~lhf/ftp/lua/index.html#lpack) is included in the library.
 
-### usage
-The following is copied verbatim from lpack's original documentation
+### Usage
+The following is copied verbatim from lpack's original documentation.
 
 The library adds two functions to the string library: pack and unpack.
 

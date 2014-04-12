@@ -109,7 +109,7 @@ beyond the end of s will always return nil values.
 
 * Lightningdbm is distributed under the MIT license.
 * [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/mdb/) is distributed under the OpenLDAP Public license.
-
+* lpack's code was placed under the public domain by its author.
 
 ## MIT License
 Copyright (c) 2012 Trusteer Ltd.
@@ -167,6 +167,3 @@ OpenLDAP is a registered trademark of the OpenLDAP Foundation.
 Copyright 1999-2003 The OpenLDAP Foundation, Redwood City,
 California, USA.  All Rights Reserved.  Permission to copy and
 distribute verbatim copies of this document is granted.
-
-## lpack
-lpack's code was placed under the public domain by its author.

@@ -330,6 +330,24 @@ static int cursor_get(lua_State *L) {
   return error_and_out(L,err);
 }
 
+static int cursor_get_key(lua_State *L) {
+  MDB_cursor* cursor = check_cursor(L,1);
+  MDB_val k;
+  MDB_cursor_op op = luaL_checkinteger(L,3);
+  int err;
+  pop_val(L,2,&k);
+  err = mdb_cursor_get(cursor,&k,NULL,op);
+  switch (err) {
+  case MDB_NOTFOUND:
+    lua_pushnil(L);
+    return 1;
+  case 0:
+    lua_pushlstring(L,k.mv_data,k.mv_size);
+    return 1;
+  }
+  return error_and_out(L,err);
+}
+
 static int cursor_put(lua_State *L) {
   MDB_cursor* cursor = check_cursor(L,1);
   MDB_val k,v;
@@ -365,6 +383,7 @@ static const lua_reg_t cursor_methods[] = {
   {"txn",cursor_txn},
   {"dbi",cursor_dbi},
   {"get",cursor_get},
+  {"get_key",cursor_get},
   {"put",cursor_put},
   {"del",cursor_del},
   {"count",cursor_count},
@@ -647,6 +666,10 @@ int luaopen_lightningmdb(lua_State *L) {
   setfield_enum(MDB_NOMETASYNC);
   setfield_enum(MDB_NOSYNC);
   setfield_enum(MDB_MAPASYNC);
+  setfield_enum(MDB_NOTLS);
+  setfield_enum(MDB_NOLOCK);
+  setfield_enum(MDB_NORDAHEAD);
+  setfield_enum(MDB_NOMEMINIT);
 
   setfield_enum(MDB_FIRST);
   setfield_enum(MDB_FIRST_DUP);

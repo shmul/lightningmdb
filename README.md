@@ -8,8 +8,7 @@ Lightningdbm is a thin wrapper around [OpenLDAP Lightning Memory-Mapped Database
 ## Prerequisites
 
 * Lua 5.1.x or 5.2.x
-* [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/mdb/)
-
+* [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/mdb/). A clone of just the LMDB code is also available on [Gitorious](https://gitorious.org/mdb/mdb)
 ## Building
 
 * Building LMDB is a simple `make; make install`
@@ -68,6 +67,7 @@ All the LMDB enums and defines are available through this table as well as the f
 * `txn` - `mdb_cursor_txn`
 * `dbi` - `mdb_cursor_dbi`
 * `get` - `mdb_cursor_get`
+* `get_key` - `mdb_cursor_get` but the data is not returned (this isn't a part of the original API).
 * `put` - `mdb_cursor_put`
 * `del` - `mdb_cursor_del`
 * `count` - `mdb_cursor_count`

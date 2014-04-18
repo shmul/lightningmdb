@@ -383,7 +383,7 @@ static const lua_reg_t cursor_methods[] = {
   {"txn",cursor_txn},
   {"dbi",cursor_dbi},
   {"get",cursor_get},
-  {"get_key",cursor_get},
+  {"get_key",cursor_get_key},
   {"put",cursor_put},
   {"del",cursor_del},
   {"count",cursor_count},

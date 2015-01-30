@@ -10,8 +10,6 @@
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
-#include "lpack.c"
-
 
 #if LUA_VERSION_NUM<=501
 typedef luaL_reg lua_reg_t;
@@ -33,6 +31,11 @@ int lua_type_error(lua_State *L,int narg,const char *tname) {
 }
 #endif
 
+#ifndef luaL_reg
+#define luaL_reg luaL_Reg
+#endif
+
+#include "lpack.c"
 
 #define LIGHTNING "lightningmdb"
 #define ENV "lightningmdb_env"

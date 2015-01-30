@@ -43,7 +43,11 @@ int lua_type_error(lua_State *L,int narg,const char *tname) {
 
 static int str_error_and_out(lua_State* L,const char* err) {
   lua_pushnil(L);
-  lua_pushstring(L,err);
+  if ( err ) {
+    lua_pushstring(L,err);
+  } else {
+    lua_pushstring(L,"Unknown error");
+  }
   return 2;
 }
 

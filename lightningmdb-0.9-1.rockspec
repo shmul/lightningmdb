@@ -14,6 +14,12 @@ description = {
 dependencies = {
    "lua >= 5.1"
 }
+external_dependencies = {
+  LMDB = {
+    header = "lmdb.h",
+    library = "lmdb",
+  }
+}
 build = {
    type = "builtin",
    modules = {
@@ -21,8 +27,8 @@ build = {
          sources = {"lightningmdb.c"},
          defines = {},
          libraries = {"lmdb"},
-         incdirs = {"$(LMDBINC)"},
-         libdirs = {"$(LMDBLIB)"}
+         incdirs = {"$(LMDB_INCDIR)"},
+         libdirs = {"$(LMDB_LIBDIR)"}
       }
    }
 }

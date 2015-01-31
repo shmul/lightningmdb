@@ -214,12 +214,12 @@ static int env_set_mapsize(lua_State *L) {
 }
 
 static int env_set_maxreaders(lua_State *L) {
-  // TODO
+  /* TODO */
   return unimplemented(L);
 }
 
 static int env_get_maxreaders(lua_State *L) {
-  // TODO
+  /* TODO */
   return unimplemented(L);
 }
 
@@ -303,7 +303,7 @@ static int cursor_txn(lua_State *L) {
   MDB_cursor* cursor = check_cursor(L,1);
   MDB_txn* txn = mdb_cursor_txn(cursor);
   (void)txn;
-  // TODO - we'll need a mapping from MDB_txn* to the lua userdata
+  /* TODO - we'll need a mapping from MDB_txn* to the lua userdata */
   return unimplemented(L);
 }
 

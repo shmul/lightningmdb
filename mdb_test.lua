@@ -1,21 +1,4 @@
-local lightningmdb_lib=require "lightningmdb"
-local lightningmdb = _VERSION=="Lua 5.2" and lightningmdb_lib or lightningmdb
-
-local MDB = setmetatable({}, {__index = function(t, k)
-  return lightningmdb["MDB_" .. k]
-end})
-
-local function pt(t)
-  for k,v in pairs(t) do
-    print(k,v)
-  end
-end
-
-local function ps(e)
-  print("--- env stat")
-  pt(e:stat())
-  print("---")
-end
+require "test_common"
 
 local function cursor_pairs(cursor_,key_,op_)
   return coroutine.wrap(
@@ -41,8 +24,8 @@ local function mtest()
 
   local e = lightningmdb.env_create()
   e:set_mapsize(10485760)
-  os.execute("mkdir -p ./temp/testdb")
-  e:open("./temp/testdb",MDB.FIXEDMAP,420)
+  local dir = test_setup("testdb")
+  e:open(dir,MDB.FIXEDMAP,420)
   local t = e:txn_begin(nil,0)
   local d = t:dbi_open(nil,0)
 
@@ -122,8 +105,8 @@ local function mtest2()
   local e = lightningmdb.env_create()
   e:set_mapsize(10485760)
   e:set_maxdbs(4)
-  os.execute("mkdir -p ./temp/testdb")
-  e:open("./temp/testdb",MDB.FIXEDMAP + MDB.NOSYNC,420)
+  local dir = test_setup("testdb")
+  e:open(dir,MDB.FIXEDMAP + MDB.NOSYNC,420)
   local t = e:txn_begin(nil,0)
   local d = t:dbi_open("id1",MDB.CREATE)
 
@@ -204,8 +187,8 @@ local function mtest3()
   local e = lightningmdb.env_create()
   e:set_mapsize(10485760)
   e:set_maxdbs(4)
-  os.execute("mkdir -p ./temp/testdb")
-  e:open("./temp/testdb",MDB.FIXEDMAP + MDB.NOSYNC,420)
+  local dir = test_setup("testdb")
+  e:open(dir,MDB.FIXEDMAP + MDB.NOSYNC,420)
 
   local t = e:txn_begin(nil,0)
   local d = t:dbi_open("id2",MDB.CREATE+MDB.DUPSORT)

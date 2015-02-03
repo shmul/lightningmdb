@@ -1,12 +1,4 @@
-local lightningmdb_lib=require "lightningmdb"
-
-local lightningmdb = _VERSION=="Lua 5.2" and lightningmdb_lib or lightningmdb
-
-local function pt(t)
-  for k,v in pairs(t) do
-    print(k,v)
-  end
-end
+require "test_common"
 
 local function basic_test()
   print("Lightning MDB version:",lightningmdb.version())
@@ -18,10 +10,10 @@ local function basic_test()
   -- env
   local e = lightningmdb.env_create()
   print(e)
-  os.execute("mkdir -p ./temp/foo")
-  print(e:open("./temp/foo",0,420))
-  print("fixedmap",lightningmdb.MDB_FIXEDMAP)
-  print("read only",lightningmdb.MDB_RDONLY)
+  local dir = test_setup("foo")
+  print(e:open(dir,0,420))
+  print("fixedmap",MDB.FIXEDMAP)
+  print("read only",MDB.RDONLY)
 
   print("-- stats --")
   pt(e:stat())
@@ -53,20 +45,20 @@ local function grow_db()
   local num_pages = 5
   local e
 
-  os.execute("mkdir ./temp/bar")
+  local dir = test_setup("bar")
 
   local function grow()
     e = lightningmdb.env_create()
     num_pages = num_pages * 2
     print(e:set_mapsize(num_pages*4096))
-    print(e:open("./temp/bar",0,420))
+    print(e:open(dir,0,420))
   end
 
   grow()
   local t = e:txn_begin(nil,0)
-  local db = t:dbi_open(nil,lightningmdb.MDB_DUPSORT)
+  local db = t:dbi_open(nil,MDB.DUPSORT)
   for i=1,600 do
-    local rc,err = t:put(db,"hello "..i,"cruel world",lightningmdb.MDB_NODUPDATA)
+    local rc,err = t:put(db,"hello "..i,"cruel world",MDB.NODUPDATA)
     if not rc then
       if err:find("MDB_MAP_FULL",1,true) then
         print("making more room at",i)
@@ -75,7 +67,7 @@ local function grow_db()
 
         grow()
         t = e:txn_begin(nil,0)
-        db = t:dbi_open(nil,lightningmdb.MDB_DUPSORT)
+        db = t:dbi_open(nil,MDB.DUPSORT)
       else
         print(rc,err)
       end

@@ -2,22 +2,12 @@
 # based on lpack's
 
 # change these to reflect your Lua installation
-ifeq ($(LUAVER),5.2)
-  LUA=/Users/shmul/dev/sandbox/lua-5.2.0/src
-  LUAINC= $(LUA)
-  LUALIB= $(LUA)
-  LUABIN= $(LUA)
-else
-  LUA=/usr/local
-  LUAINC= $(LUA)/include
-  LUALIB= $(LUA)/lib
-  LUABIN= $(LUA)/bin
-endif
+LUAINC= /usr/include/lua5.1
+LUALIB= $(LUA_BASE)/lib
+LUABIN= /usr/bin
 
-
-LMDB=/Users/shmul/dev/remotes/mdb/libraries/liblmdb/
-LMDBINC= $(LMDB)
-LMDBLIB= $(LMDB)
+LMDBINC= /usr/local/include
+LMDBLIB= /usr/local/lib
 
 # probably no need to change anything below here
 platform=$(shell uname)

@@ -7,11 +7,23 @@ Lightningdbm is a thin wrapper around [OpenLDAP Lightning Memory-Mapped Database
 
 ## Prerequisites
 
-* Lua 5.1.x or 5.2.x
+* Lua 5.1.x or greater. It should be compatible with Luajit though it wasn't thoroughly tested.
 * [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/mdb/). A clone of just the LMDB code is also available on [Gitorious](https://gitorious.org/mdb/mdb)
-## Building
 
-* Building LMDB is a simple `make; make install`
+## Building
+### LMDB
+* Get LMDB by `git clone https://gitorious.org/mdb/mdb.git`
+* Building LMDB is a simple
+```
+cd mdb/libraries/liblmdb/
+make
+make install
+```
+### Lightningdbm
+#### Luarocks
+`luarocks` can be used to build and install the files from source.
+
+#### Manually
 * edit the Lightningdbm `Makefile` and set the Lua and Lightningdbm paths.
 * run `make` to generate the library.
 

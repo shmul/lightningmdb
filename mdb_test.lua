@@ -1,6 +1,10 @@
 local lightningmdb_lib=require "lightningmdb"
 local lightningmdb = _VERSION=="Lua 5.2" and lightningmdb_lib or lightningmdb
 
+local MDB = setmetatable({}, {__index = function(t, k)
+  return lightningmdb["MDB_" .. k]
+end})
+
 local function pt(t)
   for k,v in pairs(t) do
     print(k,v)
@@ -18,7 +22,7 @@ local function cursor_pairs(cursor_,key_,op_)
     function()
       local k = key_,v
       repeat
-        k,v = cursor_:get(k,op_ or cursor_.MDB_NEXT)
+        k,v = cursor_:get(k,op_ or MDB.NEXT)
         if k then
           coroutine.yield(k,v)
         end
@@ -38,7 +42,7 @@ local function mtest()
   local e = lightningmdb.env_create()
   e:set_mapsize(10485760)
   os.execute("mkdir -p ./temp/testdb")
-  e:open("./temp/testdb",e.MDB_FIXEDMAP,420)
+  e:open("./temp/testdb",MDB.FIXEDMAP,420)
   local t = e:txn_begin(nil,0)
   local d = t:dbi_open(nil,0)
 
@@ -46,7 +50,7 @@ local function mtest()
   local j = 0
   for i,v in ipairs(values) do
     local rc = t:put(d,string.format("%03x",v),string.format("%d foo bar",v),
-                     lightningmdb.MDB_NOOVERWRITE)
+                     MDB.NOOVERWRITE)
     if not rc then
       j = j + 1
     end
@@ -87,14 +91,14 @@ local function mtest()
   c = t:cursor_open(d)
   print("cursor next")
   local key
-  for k,v in cursor_pairs(c,nil,c.MDB_NEXT) do
+  for k,v in cursor_pairs(c,nil,MDB.NEXT) do
     print(k,v)
     key = k
   end
 
   print("cursor prev")
 
-  for k,v in cursor_pairs(c,key,c.MDB_PREV) do
+  for k,v in cursor_pairs(c,key,MDB.PREV) do
     print(k,v)
   end
 
@@ -119,15 +123,15 @@ local function mtest2()
   e:set_mapsize(10485760)
   e:set_maxdbs(4)
   os.execute("mkdir -p ./temp/testdb")
-  e:open("./temp/testdb",e.MDB_FIXEDMAP + e.MDB_NOSYNC,420)
+  e:open("./temp/testdb",MDB.FIXEDMAP + MDB.NOSYNC,420)
   local t = e:txn_begin(nil,0)
-  local d = t:dbi_open("id1",t.MDB_CREATE)
+  local d = t:dbi_open("id1",MDB.CREATE)
 
   print("adding values:",count)
   local j = 0
   for i,v in ipairs(values) do
     local rc = t:put(d,string.format("%03x",v),string.format("%d foo bar",v),
-                     lightningmdb.MDB_NOOVERWRITE)
+                     MDB.NOOVERWRITE)
     if not rc then
       j = j + 1
     end
@@ -169,14 +173,14 @@ local function mtest2()
   c = t:cursor_open(d)
   print("cursor next")
   local key
-  for k,v in cursor_pairs(c,nil,c.MDB_NEXT) do
+  for k,v in cursor_pairs(c,nil,MDB.NEXT) do
     print(k,v)
     key = k
   end
 
   print("cursor prev")
 
-  for k,v in cursor_pairs(c,key,c.MDB_PREV) do
+  for k,v in cursor_pairs(c,key,MDB.PREV) do
     print(k,v)
   end
 
@@ -201,10 +205,10 @@ local function mtest3()
   e:set_mapsize(10485760)
   e:set_maxdbs(4)
   os.execute("mkdir -p ./temp/testdb")
-  e:open("./temp/testdb",e.MDB_FIXEDMAP + e.MDB_NOSYNC,420)
+  e:open("./temp/testdb",MDB.FIXEDMAP + MDB.NOSYNC,420)
 
   local t = e:txn_begin(nil,0)
-  local d = t:dbi_open("id2",t.MDB_CREATE+t.MDB_DUPSORT)
+  local d = t:dbi_open("id2",MDB.CREATE+MDB.DUPSORT)
 
   print("adding values:",count)
   local j = 0
@@ -213,7 +217,7 @@ local function mtest3()
       v = values[i-1]
     end
     local rc = t:put(d,string.format("%03x",v),string.format("%d foo bar",v),
-                     lightningmdb.MDB_NODUPDATA)
+                     MDB.NODUPDATA)
     if not rc then
       j = j + 1
     end
@@ -227,7 +231,7 @@ local function mtest3()
   t = e:txn_begin(nil,0)
   c = t:cursor_open(d)
 
-  for k,v in cursor_pairs(c,nil,c.MDB_NEXT) do
+  for k,v in cursor_pairs(c,nil,MDB.NEXT) do
     print(k,v)
   end
 

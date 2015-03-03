@@ -474,7 +474,7 @@ static int txn_stat(lua_State* L) {
 static int txn_dbi_drop(lua_State* L) {
   MDB_txn* txn = check_txn(L,1);
   MDB_dbi dbi = luaL_checkinteger(L,2);
-  int del = luaL_checkinteger(L,1);
+  int del = luaL_checkinteger(L,3);
   int err = mdb_drop(txn,dbi,del);
   return success_or_err(L,err);
 }

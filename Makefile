@@ -2,9 +2,9 @@
 # based on lpack's
 
 # change these to reflect your Lua installation
-LUAINC= /usr/include/lua5.1
-LUALIB= $(LUA_BASE)/lib
-LUABIN= /usr/bin
+LUAINC= /usr/local/include/
+LUALIB= /usr/local/lib/
+LUABIN= /usr/local/bin
 
 LMDBINC= /usr/local/include
 LMDBLIB= /usr/local/lib

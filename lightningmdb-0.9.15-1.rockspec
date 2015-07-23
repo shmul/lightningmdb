@@ -2,14 +2,14 @@ package = "Lightningmdb"
 version = "0.9.15-1"
 source = {
    dir = "lightningmdb-0.9.15",
-   url = "https://github.com/shmul/lightningdbm/archive/lightningmdb-0.9.15.zip"
+   url = "https://github.com/shmul/lightningmdb/archive/lightningmdb-0.9.15.zip"
 }
 description = {
    summary = "A thin wrapper around OpenLDAP Lightning Memory-Mapped Database (LMDB).",
    detailed = [[
      LMDB is a key-value embedded store that is a part of the OpenLDAP project. This rock provides a Lua interface to to it.
    ]],
-   homepage = "https://github.com/shmul/lightningdbm",
+   homepage = "https://github.com/shmul/lightningmdb",
    license = "MIT/X11" -- or whatever you like
 }
 dependencies = {

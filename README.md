@@ -1,6 +1,6 @@
 # General
 
-Lightningdbm is a thin wrapper around [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/mdb/) .
+Lightningmdb is a thin wrapper around [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/mdb/) .
 
 
 # Installation
@@ -19,12 +19,12 @@ cd lmdb/libraries/liblmdb/
 make
 make install
 ```
-### Lightningdbm
+### Lightningmdb
 #### Luarocks
 `luarocks` can be used to build and install the files from source.
 
 #### Manually
-* edit the Lightningdbm `Makefile` and set the Lua and Lightningdbm paths.
+* edit the Lightningmdb `Makefile` and set the Lua and Lightningmdb paths.
 * run `make` to generate the library.
 
 # Usage
@@ -34,7 +34,7 @@ Every attempt was made to honor the original naming convention. The documentatio
 
 The (Lua) tests files provide usage reference. Some of them are direct translation of LMDB's test files.
 
-## lightningdbm
+## lightningmdb
 All the LMDB enums and defines are available through this table as well as the following functions:
 
 * `version` - `lmdb_version`
@@ -119,7 +119,7 @@ beyond the end of s will always return nil values.
 
 # License
 
-* Lightningdbm is distributed under the MIT license.
+* Lightningmdb is distributed under the MIT license.
 * [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/mdb/) is distributed under the OpenLDAP Public license.
 * lpack's code was placed under the public domain by its author.
 

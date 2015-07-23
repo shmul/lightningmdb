@@ -8,7 +8,7 @@ Lightningdbm is a thin wrapper around [OpenLDAP Lightning Memory-Mapped Database
 ## Prerequisites
 
 * Lua 5.1.x or greater. It should be compatible with Luajit though it wasn't thoroughly tested.
-* [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/mdb/). A clone of just the LMDB code is also available on [Gitorious](https://gitorious.org/mdb/mdb)
+* [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/mdb/). A clone of just the LMDB code is also available [here](https://github.com/LMDB/lmdb)
 
 ## Building
 ### LMDB
@@ -124,7 +124,9 @@ beyond the end of s will always return nil values.
 * lpack's code was placed under the public domain by its author.
 
 ## MIT License
-Copyright (c) 2012 Trusteer Ltd.
+Copyright (c) 2012,2015 Trusteer Ltd.
+
+Author: Shmulik Regev
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, sub}}`
 

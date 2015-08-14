@@ -35,7 +35,9 @@ int lua_type_error(lua_State *L,int narg,const char *tname) {
 #define luaL_reg luaL_Reg
 #endif
 
+#if LUA_VERSION_NUM<=502
 #include "lpack.c"
+#endif
 
 #define LIGHTNING "lightningmdb"
 #define ENV "lightningmdb_env"
@@ -629,7 +631,9 @@ static const lua_reg_t globals[] = {
 
 
 int luaopen_lightningmdb(lua_State *L) {
+#if LUA_VERSION_NUM<=502
   luaopen_pack(L);
+#endif
   luaL_newmetatable(L,LIGHTNING);
   lua_set_funcs(L,LIGHTNING,globals);
   setfield_enum(MDB_NOOVERWRITE);

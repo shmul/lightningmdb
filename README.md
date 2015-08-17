@@ -86,7 +86,7 @@ All the LMDB enums and defines are available through this table as well as the f
 
 
 ## lpack
-As a utility, [LHF's lpack](http://www.tecgraf.puc-rio.br/~lhf/ftp/lua/index.html#lpack) is included in the library.
+As a utility, [LHF's lpack](http://www.tecgraf.puc-rio.br/~lhf/ftp/lua/index.html#lpack) is included in the library for Lua versions lower than 5.3.
 
 ### Usage
 The following is copied verbatim from lpack's original documentation.

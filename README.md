@@ -12,7 +12,7 @@ Lightningmdb is a thin wrapper around [OpenLDAP Lightning Memory-Mapped Database
 
 ## Building
 ### LMDB
-* Get LMDB by `git clone https://gitorious.org/mdb/mdb`
+* Get LMDB by `git clone https://github.com/LMDB/lmdb`
 * Building LMDB is a simple
 ```
 cd lmdb/libraries/liblmdb/

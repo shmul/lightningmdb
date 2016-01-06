@@ -1,5 +1,5 @@
 package = "Lightningmdb"
-version = "0.9.17-1"
+version = "0.9.17-2"
 source = {
    dir = "lightningmdb-0.9.17",
    url = "https://github.com/shmul/lightningmdb/archive/0.9.17.zip"

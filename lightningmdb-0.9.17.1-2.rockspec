@@ -1,8 +1,8 @@
 package = "Lightningmdb"
-version = "0.9.17.1-1"
+version = "0.9.17.1-2"
 source = {
-   dir = "lightningmdb-0.9.17.1",
-   url = "https://github.com/shmul/lightningmdb/archive/0.9.17.1.zip"
+   dir = "lightningmdb-0.9.17.2",
+   url = "https://github.com/shmul/lightningmdb/archive/0.9.17.2.zip"
 }
 description = {
    summary = "A thin wrapper around OpenLDAP Lightning Memory-Mapped Database (LMDB).",
@@ -26,7 +26,7 @@ build = {
    modules = {
      lightningmdb = {
          sources = {"lightningmdb.c"},
-         defines = {},
+         defines = {USE_GLOBALS},
          libraries = {"lmdb"},
          incdirs = {"$(LMDB_INCDIR)"},
          libdirs = {"$(LMDB_LIBDIR)"}

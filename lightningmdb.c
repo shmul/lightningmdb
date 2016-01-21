@@ -35,9 +35,7 @@ int lua_type_error(lua_State *L,int narg,const char *tname) {
 #define luaL_reg luaL_Reg
 #endif
 
-#if LUA_VERSION_NUM<=502
 #include "lpack.c"
-#endif
 
 #define LIGHTNING "lightningmdb"
 #define ENV "lightningmdb_env"

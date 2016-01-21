@@ -1,8 +1,8 @@
 package = "Lightningmdb"
-version = "0.9.17.1-2"
+version = "0.9.17.2-1"
 source = {
-   dir = "lightningmdb-0.9.17.1-2",
-   url = "https://github.com/shmul/lightningmdb/archive/0.9.17.1-2.zip"
+   dir = "lightningmdb-"..version,
+   url = "https://github.com/shmul/lightningmdb/archive/"..version..".zip"
 }
 description = {
    summary = "A thin wrapper around OpenLDAP Lightning Memory-Mapped Database (LMDB).",

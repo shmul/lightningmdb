@@ -629,9 +629,8 @@ static const lua_reg_t globals[] = {
 
 
 int luaopen_lightningmdb(lua_State *L) {
-#if LUA_VERSION_NUM<=502
   luaopen_pack(L);
-#endif
+
   luaL_newmetatable(L,LIGHTNING);
   lua_set_funcs(L,LIGHTNING,globals);
   setfield_enum(MDB_NOOVERWRITE);

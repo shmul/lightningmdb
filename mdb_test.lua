@@ -3,7 +3,7 @@ require "test_common"
 local function cursor_pairs(cursor_,key_,op_)
   return coroutine.wrap(
     function()
-      local k = key_,v
+      local k = key_
       repeat
         k,v = cursor_:get(k,op_ or MDB.NEXT)
         if k then

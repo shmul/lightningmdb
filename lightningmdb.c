@@ -538,6 +538,12 @@ static int txn_dcmp(lua_State* L) {
   return txn_cmp_helper(L,MDB_DUPSORT);
 }
 
+static int txn_id(lua_State* L) {
+  MDB_txn* txn = check_txn(L,1);
+  lua_pushinteger(L,mdb_txn_id(txn));
+  return 1;
+}
+
 static int txn_cursor_open(lua_State* L) {
   MDB_txn* txn = check_txn(L,1);
   MDB_dbi dbi = luaL_checkinteger(L,2);
@@ -574,6 +580,7 @@ static const lua_reg_t txn_methods[] = {
   {"del",txn_del},
   {"cmp",txn_cmp},
   {"dcmp",txn_dcmp},
+  {"id",txn_id},
   {"cursor_open",txn_cursor_open},
   {"cursor_renew",txn_cursor_renew},
   {0,0}

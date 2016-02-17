@@ -33,9 +33,8 @@ local function basic_test()
   t:renew()
   --t:abort()
   local db = t:dbi_open(nil,0)
-  print("-- txn stat --")
+  print(string.format("-- txn stat [%d] --",t:id()))
   pt(t:stat(db))
-
   t:abort()
   e:close()
 end

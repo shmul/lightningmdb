@@ -1,6 +1,8 @@
 /*
  * Shmulik Regev <shmulbox@gmail.com>
  */
+/* -*- c-basic-offset: 2 -*- */
+/* -*- c-default-style: "k&r" -*- */
 
 #include <ctype.h>
 #include <string.h>
@@ -44,6 +46,29 @@ int lua_type_error(lua_State *L,int narg,const char *tname) {
 
 #define setfield_enum(x) lua_pushnumber(L,x); lua_setfield(L,-2,#x)
 
+#define DEFINE_register_methods(x,X)                                  \
+  void x##_register(lua_State* L) {                                   \
+    luaL_newmetatable(L, X);                                          \
+    lua_pushstring(L, "__index");                                     \
+    lua_pushvalue(L, -2);        /* push metatable */                 \
+    lua_rawset(L, -3);           /* metatable.__index = metatable */  \
+    lua_set_funcs(L,X,x##_methods);                                   \
+  }
+
+#define set_meta_and_return(x,X)                            \
+  *(MDB_##x **)(lua_newuserdata(L,sizeof(MDB_##x *))) = x;  \
+  luaL_getmetatable(L,X);                                   \
+  lua_setmetatable(L,-2);                                   \
+  return 1;
+
+
+static int clean_metatable(lua_State* L) {
+  lua_pushnil(L);
+  lua_setmetatable(L,-2);
+  return 0;
+}
+
+
 static int str_error_and_out(lua_State* L,const char* err) {
   lua_pushnil(L);
   if ( err ) {
@@ -75,10 +100,10 @@ static int unimplemented(lua_State* L) {
 #define DEFINE_check(x,NAME)                            \
   static MDB_##x* check_##x(lua_State *L, int index) {  \
     MDB_##x* y;                                         \
-      luaL_checktype(L, index, LUA_TUSERDATA);          \
-      y = *(MDB_##x**)luaL_checkudata(L, index, NAME);  \
-      if (y == NULL) lua_type_error(L,index,NAME);      \
-      return y;                                         \
+    luaL_checktype(L, index, LUA_TUSERDATA);            \
+    y = *(MDB_##x**)luaL_checkudata(L, index, NAME);    \
+    if (y == NULL) lua_type_error(L,index,NAME);        \
+    return y;                                           \
   }
 
 DEFINE_check(env,ENV)
@@ -175,8 +200,7 @@ static int env_sync(lua_State *L) {
 static int env_close(lua_State *L) {
   MDB_env* env = check_env(L,1);
   mdb_env_close(env);
-  lua_pushnil(L);
-  lua_setmetatable(L,1);
+  clean_metatable(L);
   return 0;
 }
 
@@ -248,11 +272,7 @@ static int env_txn_begin(lua_State* L) {
   if ( err ) {
     return error_and_out(L,err);
   }
-
-  *(MDB_txn**)(lua_newuserdata(L,sizeof(MDB_txn*))) = txn;
-  luaL_getmetatable(L,TXN);
-  lua_setmetatable(L,-2);
-  return 1;
+  set_meta_and_return(txn,TXN);
 }
 
 static int env_dbi_close(lua_State* L) {
@@ -285,21 +305,13 @@ static const lua_reg_t env_methods[] = {
 };
 
 
-void env_register(lua_State* L) {
-  luaL_newmetatable(L,ENV);
-  lua_set_funcs(L,ENV,env_methods);
-  lua_settable(L,-1);
-
-  luaL_getmetatable(L,ENV);
-  lua_setfield(L,-1,"__index");
-}
+DEFINE_register_methods(env,ENV)
 
 /* cursor */
 static int cursor_close(lua_State *L) {
   MDB_cursor* cursor = check_cursor(L,1);
   mdb_cursor_close(cursor);
-  lua_pushnil(L);
-  lua_setmetatable(L,1);
+  clean_metatable(L);
   return 0;
 }
 
@@ -398,24 +410,9 @@ static const lua_reg_t cursor_methods[] = {
   {0,0}
 };
 
-void cursor_register(lua_State* L) {
-
-  luaL_newmetatable(L,CURSOR);
-  lua_set_funcs(L,CURSOR,cursor_methods);
-  lua_settable(L,-1);
-
-  luaL_getmetatable(L,CURSOR);
-  lua_setfield(L,-1,"__index");
-}
-
+DEFINE_register_methods(cursor,CURSOR)
 
 /* txn */
-
-static int txn_clean_metatable(lua_State* L) {
-  lua_pushnil(L);
-  lua_setmetatable(L,1);
-  return 0;
-}
 
 static int txn_commit(lua_State* L) {
   MDB_txn* txn = check_txn(L,1);
@@ -425,7 +422,7 @@ static int txn_commit(lua_State* L) {
     return error_and_out(L,err);
   }
 
-  txn_clean_metatable(L);
+  clean_metatable(L);
   lua_pushboolean(L,1);
   return 1;
 }
@@ -433,7 +430,7 @@ static int txn_commit(lua_State* L) {
 static int txn_abort(lua_State* L) {
   MDB_txn* txn = check_txn(L,1);
   mdb_txn_abort(txn);
-  txn_clean_metatable(L);
+  clean_metatable(L);
   return 0;
 }
 
@@ -553,10 +550,7 @@ static int txn_cursor_open(lua_State* L) {
     return error_and_out(L,err);
   }
 
-  *(MDB_cursor**)(lua_newuserdata(L,sizeof(MDB_cursor*))) = cursor;
-  luaL_getmetatable(L,CURSOR);
-  lua_setmetatable(L,-2);
-  return 1;
+  set_meta_and_return(cursor,CURSOR);
 }
 
 static int txn_cursor_renew(lua_State *L) {
@@ -567,7 +561,8 @@ static int txn_cursor_renew(lua_State *L) {
 }
 
 static const lua_reg_t txn_methods[] = {
-  {"__gc",txn_clean_metatable},
+  {"__gc",clean_metatable},
+  {"id",txn_id},
   {"commit",txn_commit},
   {"abort",txn_abort},
   {"reset",txn_reset},
@@ -580,23 +575,12 @@ static const lua_reg_t txn_methods[] = {
   {"del",txn_del},
   {"cmp",txn_cmp},
   {"dcmp",txn_dcmp},
-  {"id",txn_id},
   {"cursor_open",txn_cursor_open},
   {"cursor_renew",txn_cursor_renew},
   {0,0}
 };
 
-
-void txn_register(lua_State* L) {
-  luaL_newmetatable(L,TXN);
-  lua_set_funcs(L,TXN,txn_methods);
-  lua_settable(L,-1);
-
-  luaL_getmetatable(L,TXN);
-  lua_setfield(L,-1,"__index");
-
-
-}
+DEFINE_register_methods(txn,TXN)
 
 /* globals */
 static int lmdb_version(lua_State *L) {
@@ -620,17 +604,14 @@ static int lmdb_env_create(lua_State *L) {
     return 2;
   }
 
-  *(MDB_env**)(lua_newuserdata(L,sizeof(MDB_env*))) = env;
-  luaL_getmetatable(L,ENV);
-  lua_setmetatable(L,-2);
-  return 1;
+  set_meta_and_return(env,ENV);
 }
 
 static const lua_reg_t globals[] = {
   {"version",lmdb_version},
   {"strerror",lmdb_strerror},
   {"env_create",lmdb_env_create},
-  {NULL,	NULL}
+  {NULL,  NULL}
 };
 
 

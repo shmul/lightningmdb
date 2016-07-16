@@ -35,4 +35,4 @@ RUN mkdir -p $HOME/lightningmdb/temp
 WORKDIR $HOME/lightningmdb
 
 COPY *.lua *.c Makefile *.rockspec $HOME/lightningmdb/
-#CMD make BASE_DIR=/usr LUAINC=/usr/include/lua${lua_ver}
+RUN make BASE_DIR=/usr LUAINC=/usr/include/lua${lua_ver}

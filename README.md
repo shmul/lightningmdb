@@ -28,7 +28,7 @@ make install
 * run `make` to generate the library.
 
 #### Docker
-A set of docker files are provided also, primarily for building the library against multiple Lua versions. Check out the `docker` directory.
+A set of docker files are provided also, primarily for building the library against multiple Lua versions. Run `./docker/build_container.sh lua5.1` to test that the library successfully builds with Lua 5.1 (versions 5.2 and 5.3 are supported as well).
 
 # Usage
 Every attempt was made to honor the original naming convention. The documentation is therefore scarce and the [database's documentation](http://symas.com/mdb/doc/) should be used.

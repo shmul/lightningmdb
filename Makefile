@@ -2,10 +2,10 @@
 # based on lpack's
 
 # change these to reflect your Lua installation
-BASE_DIR=/usr/local
-LUAINC=$(BASE_DIR)/include
-LUALIB=$(BASE_DIR)/lib
-LUABIN=$(BASE_DIR)/bin
+BASE_DIR ?= /usr/local
+LUAINC ?= $(BASE_DIR)/include
+LUALIB ?= $(BASE_DIR)/lib
+LUABIN ?= $(BASE_DIR)/bin/lua
 
 LMDB_INCDIR= /usr/local/include
 LMDB_LIBDIR= /usr/local/lib
@@ -39,7 +39,7 @@ TEST= test.lua
 all:	test
 
 test:	$T
-	$(LUABIN)/lua $(TEST)
+	$(LUABIN) $(TEST)
 
 o:	$(MYLIB).o
 

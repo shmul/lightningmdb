@@ -20,7 +20,7 @@ end
 function test_setup(dir_)
   local dir = "./temp/"..dir_
   os.execute("mkdir -p "..dir)
-  os.execute("rm "..dir.."/data.mdb")
-  os.execute("rm "..dir.."/lock.mdb")
+  os.execute("rm -rf "..dir.."/data.mdb")
+  os.execute("rm -rf "..dir.."/lock.mdb")
   return dir
 end

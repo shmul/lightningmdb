@@ -76,3 +76,5 @@ end
 
 basic_test()
 grow_db()
+
+print("\n\n\n**** If you are seeing this, all is good (at least as far as lightningmdb is concerned). ****")

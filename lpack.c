@@ -65,19 +65,51 @@ static void doswap(int swap, void *p, size_t n)
  }
 }
 
-#define UNPACKNUMBER(OP,T)		\
-   case OP:				\
-   {					\
-    T a;				\
-    int m=sizeof(a);			\
-    if (i+m>len) goto done;		\
-    memcpy(&a,s+i,m);			\
-    i+=m;				\
-    doswap(swap,&a,m);			\
-    lua_pushnumber(L,(lua_Number)a);	\
-    ++n;				\
-    break;				\
-   }
+#define UNPACKINTEGER(OP,T)                     \
+    case OP:                                    \
+    {                                           \
+        T a;                                    \
+        int m=sizeof(a);                        \
+        if (i+m>len) goto done;                 \
+        memcpy(&a,s+i,m);                       \
+        i+=m;                                   \
+        doswap(swap,&a,m);                      \
+        lua_pushinteger(L,(lua_Integer)a);      \
+        ++n;                                    \
+        break;                                  \
+    }
+
+#ifdef lua_Unsigned
+# define UNPACKUNSIGNED(OP,T)                                \
+    case OP:                                                 \
+    {                                                        \
+        T a;                                                 \
+        int m=sizeof(a);                                     \
+        if (i+m>len) goto done;                              \
+        memcpy(&a,s+i,m);                                    \
+        i+=m;                                                \
+        doswap(swap,&a,m);                                   \
+        lua_pushinteger(L,(lua_Unsigned)a);                  \
+        ++n;                                                 \
+        break;                                               \
+    }
+#else
+# define UNPACKUNSIGNED UNPACKINTEGER
+#endif
+
+#define UNPACKNUMBER(OP,T)                      \
+    case OP:                                    \
+    {                                           \
+        T a;                                    \
+        int m=sizeof(a);                        \
+        if (i+m>len) goto done;                 \
+        memcpy(&a,s+i,m);                       \
+        i+=m;                                   \
+        doswap(swap,&a,m);                      \
+        lua_pushnumber(L,(lua_Number)a);        \
+        ++n;                                    \
+        break;                                  \
+    }
 
 #define UNPACKSTRING(OP,T)		\
    case OP:				\
@@ -150,14 +182,14 @@ static int l_unpack(lua_State *L) 		/** unpack(s,f,[init]) */
    UNPACKNUMBER(OP_NUMBER, lua_Number)
    UNPACKNUMBER(OP_DOUBLE, double)
    UNPACKNUMBER(OP_FLOAT, float)
-   UNPACKNUMBER(OP_CHAR, char)
-   UNPACKNUMBER(OP_BYTE, unsigned char)
-   UNPACKNUMBER(OP_SHORT, short)
-   UNPACKNUMBER(OP_USHORT, unsigned short)
-   UNPACKNUMBER(OP_INT, int)
-   UNPACKNUMBER(OP_UINT, unsigned int)
-   UNPACKNUMBER(OP_LONG, long)
-   UNPACKNUMBER(OP_ULONG, unsigned long)
+   UNPACKINTEGER(OP_CHAR, char)
+   UNPACKUNSIGNED(OP_BYTE, unsigned char)
+   UNPACKINTEGER(OP_SHORT, short)
+   UNPACKUNSIGNED(OP_USHORT, unsigned short)
+   UNPACKINTEGER(OP_INT, int)
+   UNPACKUNSIGNED(OP_UINT, unsigned int)
+   UNPACKINTEGER(OP_LONG, long)
+   UNPACKUNSIGNED(OP_ULONG, unsigned long)
    case ' ': case ',':
     break;
    default:

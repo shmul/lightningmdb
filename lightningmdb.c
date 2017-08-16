@@ -331,11 +331,13 @@ static int cursor_dbi(lua_State *L) {
 }
 
 static int cursor_get(lua_State *L) {
+  int with_value = (lua_gettop(L) > 3);
   MDB_cursor* cursor = check_cursor(L,1);
   MDB_val k,v;
-  MDB_cursor_op op = luaL_checkinteger(L,3);
+  MDB_cursor_op op = luaL_checkinteger(L,with_value?4:3);
   int err;
   pop_val(L,2,&k);
+  if (with_value) pop_val(L,3,&v);
   err = mdb_cursor_get(cursor,&k,&v,op);
   switch (err) {
   case MDB_NOTFOUND:

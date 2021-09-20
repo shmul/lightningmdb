@@ -44,7 +44,7 @@ int lua_type_error(lua_State *L,int narg,const char *tname) {
 #define TXN "lightningmdb_txn"
 #define CURSOR "lightningmdb_cursor"
 
-#define setfield_enum(x) lua_pushnumber(L,x); lua_setfield(L,-2,#x)
+#define setfield_enum(x) lua_pushinteger(L,x); lua_setfield(L,-2,#x)
 
 #define DEFINE_register_methods(x,X)                                  \
   void x##_register(lua_State* L) {                                   \
@@ -112,17 +112,17 @@ DEFINE_check(cursor,CURSOR)
 
 static int stat_to_table(lua_State *L,MDB_stat *stat) {
   lua_newtable(L);
-  lua_pushnumber(L,stat->ms_psize);
+  lua_pushinteger(L,stat->ms_psize);
   lua_setfield(L,-2,"ms_psize");
-  lua_pushnumber(L,stat->ms_depth);
+  lua_pushinteger(L,stat->ms_depth);
   lua_setfield(L,-2,"ms_depth");
-  lua_pushnumber(L,stat->ms_branch_pages);
+  lua_pushinteger(L,stat->ms_branch_pages);
   lua_setfield(L,-2,"ms_branch_pages");
-  lua_pushnumber(L,stat->ms_leaf_pages);
+  lua_pushinteger(L,stat->ms_leaf_pages);
   lua_setfield(L,-2,"ms_leaf_pages");
-  lua_pushnumber(L,stat->ms_overflow_pages);
+  lua_pushinteger(L,stat->ms_overflow_pages);
   lua_setfield(L,-2,"ms_overflow_pages");
-  lua_pushnumber(L,stat->ms_entries);
+  lua_pushinteger(L,stat->ms_entries);
   lua_setfield(L,-2,"ms_entries");
   return 1;
 }
@@ -176,15 +176,15 @@ static int env_info(lua_State *L) {
   mdb_env_info(env,&info);
   lua_newtable(L);
 
-  lua_pushnumber(L,info.me_mapsize);
+  lua_pushinteger(L,info.me_mapsize);
   lua_setfield(L,-2,"me_mapsize");
-  lua_pushnumber(L,info.me_last_pgno);
+  lua_pushinteger(L,info.me_last_pgno);
   lua_setfield(L,-2,"ms_last_pgno");
-  lua_pushnumber(L,info.me_last_txnid);
+  lua_pushinteger(L,info.me_last_txnid);
   lua_setfield(L,-2,"me_last_txnid");
-  lua_pushnumber(L,info.me_maxreaders);
+  lua_pushinteger(L,info.me_maxreaders);
   lua_setfield(L,-2,"me_maxreaders");
-  lua_pushnumber(L,info.me_numreaders);
+  lua_pushinteger(L,info.me_numreaders);
   lua_setfield(L,-2,"me_numreaders");
   return 1;
 

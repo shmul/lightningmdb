@@ -1,6 +1,6 @@
 # General
 
-Lightningmdb is a thin wrapper around [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/mdb/) .
+Lightningmdb is a thin wrapper around [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/) .
 
 
 # Installation
@@ -8,7 +8,7 @@ Lightningmdb is a thin wrapper around [OpenLDAP Lightning Memory-Mapped Database
 ## Prerequisites
 
 * Lua 5.1.x or greater. It should be compatible with Luajit though it wasn't thoroughly tested.
-* [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/mdb/). A clone of just the LMDB code is also available on [Github](https://github.com/LMDB/lmdb)
+* [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/). A clone of just the LMDB code is also available on [Github](https://github.com/LMDB/lmdb)
 
 ## Building
 ### LMDB
@@ -31,7 +31,7 @@ make install
 A set of docker files are provided also, primarily for building the library against multiple Lua versions. Run `./docker/build_container.sh lua5.1` to test that the library successfully builds with Lua 5.1 (versions 5.2 and 5.3 are supported as well).
 
 # Usage
-Every attempt was made to honor the original naming convention. The documentation is therefore scarce and the [database's documentation](http://symas.com/mdb/doc/) should be used.
+Every attempt was made to honor the original naming convention. The documentation is therefore scarce and the [database's documentation](http://www.lmdb.tech/doc/) should be used.
 
 5 lua _objects_ are wrapping the access to the DB. Their mappings to the LMDB functions/constants is provided below.
 
@@ -123,7 +123,7 @@ beyond the end of s will always return nil values.
 # License
 
 * Lightningmdb is distributed under the MIT license.
-* [OpenLDAP Lightning Memory-Mapped Database (LMDB)](http://symas.com/mdb/) is distributed under the OpenLDAP Public license.
+* [OpenLDAP Lightning Memory-Mapped Database (LMDB)](https://www.symas.com/symas-open-source-licenses) is distributed under the OpenLDAP Public license.
 * lpack's code was placed under the public domain by its author.
 
 ## MIT License

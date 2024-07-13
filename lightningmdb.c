@@ -179,7 +179,7 @@ static int env_info(lua_State *L) {
   lua_pushinteger(L,info.me_mapsize);
   lua_setfield(L,-2,"me_mapsize");
   lua_pushinteger(L,info.me_last_pgno);
-  lua_setfield(L,-2,"ms_last_pgno");
+  lua_setfield(L,-2,"me_last_pgno");
   lua_pushinteger(L,info.me_last_txnid);
   lua_setfield(L,-2,"me_last_txnid");
   lua_pushinteger(L,info.me_maxreaders);

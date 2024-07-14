@@ -14,16 +14,14 @@
 #include "lauxlib.h"
 
 #if LUA_VERSION_NUM<=501
-typedef luaL_reg lua_reg_t;
 # define lua_type_error luaL_typerror
-void lua_set_funcs(lua_State *L, const char *libname,const lua_reg_t *l) {
+void lua_set_funcs(lua_State *L, const char *libname,const luaL_Reg *l) {
   lua_setglobal(L,libname);
   luaL_register(L,libname,l);
 }
 
 #else
-typedef luaL_Reg lua_reg_t;
-void lua_set_funcs(lua_State *L, const char *libname,const lua_reg_t *l) {
+void lua_set_funcs(lua_State *L, const char *libname,const luaL_Reg *l) {
   luaL_setfuncs(L,l,0);
 }
 int lua_type_error(lua_State *L,int narg,const char *tname) {
@@ -31,10 +29,6 @@ int lua_type_error(lua_State *L,int narg,const char *tname) {
                                     tname, luaL_typename(L, narg));
   return luaL_argerror(L, narg, msg);
 }
-#endif
-
-#ifndef luaL_reg
-#define luaL_reg luaL_Reg
 #endif
 
 #include "lpack.c"
@@ -284,7 +278,7 @@ static int env_dbi_close(lua_State* L) {
 }
 
 
-static const lua_reg_t env_methods[] = {
+static const luaL_Reg env_methods[] = {
 #if LUA_VERSION_NUM >= 504
   {"__close",env_close},
 #endif
@@ -401,7 +395,7 @@ static int cursor_count(lua_State *L) {
   return 1;
 }
 
-static const lua_reg_t cursor_methods[] = {
+static const luaL_Reg cursor_methods[] = {
 #if LUA_VERSION_NUM >= 504
   {"__close",cursor_close},
 #endif
@@ -568,7 +562,7 @@ static int txn_cursor_renew(lua_State *L) {
   return success_or_err(L,err);
 }
 
-static const lua_reg_t txn_methods[] = {
+static const luaL_Reg txn_methods[] = {
 #if LUA_VERSION_NUM >= 504
   {"__close",clean_metatable},
 #endif
@@ -618,7 +612,7 @@ static int lmdb_env_create(lua_State *L) {
   set_meta_and_return(env,ENV);
 }
 
-static const lua_reg_t globals[] = {
+static const luaL_Reg globals[] = {
   {"version",lmdb_version},
   {"strerror",lmdb_strerror},
   {"env_create",lmdb_env_create},

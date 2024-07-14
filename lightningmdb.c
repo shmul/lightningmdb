@@ -285,6 +285,9 @@ static int env_dbi_close(lua_State* L) {
 
 
 static const lua_reg_t env_methods[] = {
+#if LUA_VERSION_NUM >= 504
+  {"__close",env_close},
+#endif
   {"__gc",env_close},
   {"open",env_open},
   {"copy",env_copy},
@@ -399,6 +402,9 @@ static int cursor_count(lua_State *L) {
 }
 
 static const lua_reg_t cursor_methods[] = {
+#if LUA_VERSION_NUM >= 504
+  {"__close",cursor_close},
+#endif
   {"__gc",cursor_close},
   {"close",cursor_close},
   {"txn",cursor_txn},
@@ -563,6 +569,9 @@ static int txn_cursor_renew(lua_State *L) {
 }
 
 static const lua_reg_t txn_methods[] = {
+#if LUA_VERSION_NUM >= 504
+  {"__close",clean_metatable},
+#endif
   {"__gc",clean_metatable},
   {"id",txn_id},
   {"commit",txn_commit},
